@@ -22,6 +22,7 @@ public class PlayerController : MonoBehaviour
         characterController = GetComponent<CharacterController>();
         playerCamera.SetActive(true);
         Cursor.lockState = CursorLockMode.Locked;
+        health = maxHealth;
     }
 
     void Update()
@@ -68,12 +69,28 @@ public class PlayerController : MonoBehaviour
     public void TakeDamage(int damage)
     {
         health -= damage;
+        Debug.Log($"Player took {damage} damage. Current health: {health}");
+        
         if (health <= 0)
         {
-            // Player is defeated
-            health = 0;
-            OnPlayerDefeated();
+            Die();
         }
+
+        // Update UI if you have a health bar
+        // UpdateHealthUI();
+    }
+
+    void Die()
+    {
+        Debug.Log("Player died!");
+        // Implement player death logic here
+    }
+
+    void Respawn()
+    {
+        // Implement respawn logic here
+        health = maxHealth;
+        Debug.Log("Player respawned!");
     }
 
     void OnPlayerDefeated()

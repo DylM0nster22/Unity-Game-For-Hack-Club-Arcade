@@ -11,6 +11,11 @@ public class PlayerHUD : MonoBehaviour
     public Color fullHealthColor = Color.green;
     public Color lowHealthColor = Color.red;
 
+    [Header("Health Bar Settings")]
+    public float healthBarWidth = 200f;
+    public float healthBarHeight = 20f;
+    public float margin = 10f;
+
     private PlayerController playerController;
 
     void Start()
@@ -22,24 +27,32 @@ public class PlayerHUD : MonoBehaviour
             Debug.LogError("PlayerController not found in the scene!");
         }
 
-        // Position the health bar in the top right corner
+        SetupHealthBar();
+        UpdateHealthBar(playerController.health);
+    }
+
+    void SetupHealthBar()
+    {
+        // Position the health bar in the bottom left corner
         RectTransform healthBarRect = healthBarBackground.rectTransform;
-        healthBarRect.anchorMin = new Vector2(1, 1);
-        healthBarRect.anchorMax = new Vector2(1, 1);
-        healthBarRect.anchoredPosition = new Vector2(-10, -10);
-        healthBarRect.sizeDelta = new Vector2(200, 20);
+        healthBarRect.anchorMin = new Vector2(0, 0);
+        healthBarRect.anchorMax = new Vector2(0, 0);
+        healthBarRect.anchoredPosition = new Vector2(margin + healthBarWidth / 2, margin + healthBarHeight / 2);
+        healthBarRect.sizeDelta = new Vector2(healthBarWidth, healthBarHeight);
 
         // Set up the health bar fill
         RectTransform fillRect = healthBarFill.rectTransform;
-        fillRect.anchorMin = Vector2.zero;
-        fillRect.anchorMax = Vector2.one;
+        fillRect.anchorMin = new Vector2(0, 0);
+        fillRect.anchorMax = new Vector2(1, 1);
         fillRect.sizeDelta = Vector2.zero;
+        fillRect.anchoredPosition = Vector2.zero;
 
         // Position the health text
         RectTransform healthTextRect = healthText.rectTransform;
-        healthTextRect.anchorMin = new Vector2(1, 1);
-        healthTextRect.anchorMax = new Vector2(1, 1);
-        healthTextRect.anchoredPosition = new Vector2(-10, -35);
+        healthTextRect.anchorMin = new Vector2(0, 0);
+        healthTextRect.anchorMax = new Vector2(0, 0);
+        healthTextRect.anchoredPosition = new Vector2(margin + healthBarWidth / 2, margin + healthBarHeight + 5);
+        healthTextRect.sizeDelta = new Vector2(healthBarWidth, 20);
     }
 
     void Update()
