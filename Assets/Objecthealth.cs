@@ -5,6 +5,8 @@ public class Health : MonoBehaviour
     public int maxHealth = 100;
     private int currentHealth;
 
+    public int CurrentHealth => currentHealth;
+
     void Start()
     {
         currentHealth = maxHealth;
@@ -22,7 +24,6 @@ public class Health : MonoBehaviour
 
     void Die()
     {
-        // Here you can implement what happens when the object dies
         Debug.Log(gameObject.name + " has been destroyed!");
         Destroy(gameObject);
     }
