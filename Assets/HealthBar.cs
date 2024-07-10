@@ -13,9 +13,11 @@ public class HealthBar : MonoBehaviour
     private RectTransform healthBarRect;
     private Text healthText;
     private Image healthBarImage;
+    private Camera mainCamera;
 
     void Start()
     {
+        mainCamera = Camera.main;
         CreateHealthBar();
     }
 
@@ -57,7 +59,7 @@ public class HealthBar : MonoBehaviour
         healthTextObj.transform.SetParent(healthBarBg.transform);
         healthText = healthTextObj.AddComponent<Text>();
         healthText.alignment = TextAnchor.MiddleCenter;
-        healthText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        healthText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         healthText.color = Color.white;
         RectTransform textRect = healthText.GetComponent<RectTransform>();
         textRect.sizeDelta = healthBarSize; // Use public variable
@@ -73,6 +75,9 @@ public class HealthBar : MonoBehaviour
         {
             // Update the health bar position to follow the enemy with offset
             healthBarCanvas.transform.position = transform.position + offset;
+
+            // Rotate the health bar to face the main camera
+            healthBarCanvas.transform.rotation = mainCamera.transform.rotation;
 
             float healthPercentage = (float)health.CurrentHealth / health.maxHealth;
             healthBarRect.localScale = new Vector3(healthPercentage, 1, 1);

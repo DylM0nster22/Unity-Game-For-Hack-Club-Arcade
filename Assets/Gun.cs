@@ -9,9 +9,10 @@ public class Gun : MonoBehaviour
     public int magazineSize = 10;
     public float reloadTime = 2f;
     public ParticleSystem muzzleFlash;
-    public int damageAmount = 10; // Adjust the damage amount as needed
+    public int damageAmount = 10;
+    public bool isPlayerGun = true; // New variable to distinguish player's gun
 
-    private int bulletsLeft;
+    public int bulletsLeft { get; private set; }
     private bool isReloading = false;
 
     void Start()
@@ -28,22 +29,24 @@ public class Gun : MonoBehaviour
         if (isReloading)
             return;
 
-        if (Input.GetButtonDown("Fire1") && bulletsLeft > 0)
+        if (isPlayerGun) // Only check for input if it's the player's gun
         {
-            Shoot();
-        }
+            if (Input.GetButtonDown("Fire1") && bulletsLeft > 0)
+            {
+                Shoot();
+            }
 
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            StartCoroutine(Reload());
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                StartCoroutine(Reload());
+            }
         }
     }
 
-    void Shoot()
+    public void Shoot()
     {
         if (bulletsLeft <= 0) return;
 
-        // Instantiate the bullet for visual effect
         GameObject bullet = Instantiate(bulletPrefab, bulletSpawn.position, bulletSpawn.rotation);
         Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
         if (bulletRb != null)
@@ -66,6 +69,11 @@ public class Gun : MonoBehaviour
             {
                 healthComponent.TakeDamage(damageAmount);
             }
+        }
+
+        if (bulletsLeft <= 0)
+        {
+            StartCoroutine(Reload());
         }
     }
 
