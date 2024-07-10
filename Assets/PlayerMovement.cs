@@ -10,11 +10,12 @@ public class PlayerController : MonoBehaviour
     private float rotX;
     private CharacterController characterController;
     private Vector3 moveDirection;
+    public int maxHealth = 100;
+    public int health;
+
 
     [SerializeField]
     private GameObject playerCamera;
-
-    public int health = 10;
 
     void Start()
     {

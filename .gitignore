@@ -5,3 +5,24 @@
 /logs
 /usersettings
 /packages
+/assets/textmeshpro
+/assets/textmeshpro/resources
+/assets/textmeshpro/resources/Fonts
+/assets/textmeshpro/resources/Sprite Assets
+/assets/textmeshpro/resources/Shaders
+/assets/textmeshpro/resources/Editor
+/assets/textmeshpro/resources/Editor/TextMeshPro/
+/assets/textmeshpro/resources/Editor/TextMeshPro/Editor/
+/assets/textmeshpro/resources/Editor/TextMeshPro/Editor/TextMeshPro_UGUI_Editor.cs
+/assets/textmeshpro/resources/Editor/TextMeshPro/Editor/TextMeshPro_UGUI_Editor.cs
+/assets/textmeshpro/examples
+/assets/textmeshpro/examples/Runtime
+/assets/textmeshpro/examples/Runtime/TextMeshPro/
+/assets/textmeshpro/examples/Runtime/TextMeshPro/Examples
+/assets/textmeshpro/examples/Runtime/TextMeshPro/Examples/Scripts
+/assets/textmeshpro/examples/Runtime/TextMeshPro/Examples/Scripts/TextMeshPro_UGUI_Examples.cs
+/assets/textmeshpro/examples/Runtime/TextMeshPro/Examples/Scripts/TextMeshPro_UGUI_Examples.cs
+/assets/textmeshpro/examples&extras/resources
+/Assets/TextMesh Pro/Examples & Extras/Prefabs
+/Assets/TextMesh Pro/Examples & Extras/Resources
+/Assets/TextMesh Pro

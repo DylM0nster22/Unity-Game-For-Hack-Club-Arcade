@@ -96,29 +96,42 @@ public class EnemyAI : MonoBehaviour
     }
 
     void Attack()
+{
+    if (!isAttacking)
     {
-        if (!isAttacking)
-        {
-            StartCoroutine(ShootAtPlayer());
-        }
+        // Face the player before attacking
+        Vector3 directionToPlayer = player.position - transform.position;
+        directionToPlayer.y = 0; // Keep the enemy upright
+        transform.rotation = Quaternion.LookRotation(directionToPlayer);
+
+        StartCoroutine(ShootAtPlayer());
     }
+}
 
     IEnumerator ShootAtPlayer()
+{
+    isAttacking = true;
+
+    while (Vector3.Distance(transform.position, player.position) <= attackRange)
     {
-        isAttacking = true;
+        // Calculate direction to the player
+        Vector3 directionToPlayer = player.position - gun.transform.position;
+        
+        // Adjust the Y component to aim at the player's center
+        directionToPlayer.y += 1f; // Adjust this value based on your player's height
+        
+        // Normalize the direction
+        directionToPlayer.Normalize();
 
-        while (Vector3.Distance(transform.position, player.position) <= attackRange)
-        {
-            // Aim at the player
-            Vector3 aimDirection = (player.position - gun.transform.position).normalized;
-            gun.transform.forward = aimDirection;
+        // Aim the gun at the player
+        gun.transform.rotation = Quaternion.LookRotation(directionToPlayer);
 
-            // Shoot
-            gun.Shoot();
+        // Shoot
+        gun.Shoot();
 
-            yield return new WaitForSeconds(0.5f); // Wait half a second between shots
-        }
-
-        isAttacking = false;
+        yield return new WaitForSeconds(0.5f); // Wait half a second between shots
     }
+
+    isAttacking = false;
+}
 }
