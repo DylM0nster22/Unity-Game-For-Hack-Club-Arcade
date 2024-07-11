@@ -24,7 +24,13 @@ public class Health : MonoBehaviour
 
     void Die()
     {
-        Debug.Log(gameObject.name + " has been destroyed!");
-        Destroy(gameObject);
+        Debug.Log(gameObject.name + " has been deactivated!");
+        gameObject.SetActive(false);
+    }
+
+    public void Respawn()
+    {
+        currentHealth = maxHealth;
+        gameObject.SetActive(true);
     }
 }

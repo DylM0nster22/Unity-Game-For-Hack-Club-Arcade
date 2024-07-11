@@ -84,4 +84,13 @@ public class Gun : MonoBehaviour
         bulletsLeft = magazineSize;
         isReloading = false;
     }
+
+    public void ResetGun()
+    {
+        // Reset any necessary gun properties here
+        // For example:
+        
+        isReloading = false;
+        // Cancel any ongoing coroutines if necessary
+    }
 }

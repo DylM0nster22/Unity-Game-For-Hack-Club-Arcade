@@ -17,6 +17,9 @@ public class EnemyAI : MonoBehaviour
     public Transform gunPivot;
     public Vector3 gunForwardDirection = Vector3.forward;
 
+    // New variables for gun rotation
+    public Vector3 gunRotationOffset = Vector3.zero;
+
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
@@ -38,6 +41,9 @@ public class EnemyAI : MonoBehaviour
         {
             gunPivot = gun.transform;
         }
+
+        // Apply initial rotation offset to the gun
+        gunPivot.localRotation = Quaternion.Euler(gunRotationOffset);
 
         lastShotTime = -shootingCooldown; // Allow immediate shooting
     }
@@ -90,5 +96,21 @@ public class EnemyAI : MonoBehaviour
             gun.Shoot();
             lastShotTime = Time.time;
         }
+    }
+
+    public void Respawn()
+    {
+        if (health != null)
+        {
+            health.Respawn();
+        }
+        
+        if (agent != null)
+        {
+            agent.Warp(transform.position); // Reset NavMeshAgent position
+            agent.isStopped = false;
+        }
+
+        lastShotTime = -shootingCooldown; // Allow immediate shooting after respawn
     }
 }

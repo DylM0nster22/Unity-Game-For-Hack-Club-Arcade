@@ -17,12 +17,24 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private GameObject playerCamera;
 
+    public static event System.Action OnPlayerDeath;
+
+    public GameObject gunObject; // Reference to the gun GameObject
+    private Gun gunScript; // Reference to the Gun script
+
     void Start()
     {
         characterController = GetComponent<CharacterController>();
         playerCamera.SetActive(true);
         Cursor.lockState = CursorLockMode.Locked;
         health = maxHealth;
+
+        // Get reference to the Gun script
+        gunScript = gunObject.GetComponent<Gun>();
+        if (gunScript == null)
+        {
+            Debug.LogError("Gun script not found on the gun object!");
+        }
     }
 
     void Update()
@@ -42,6 +54,12 @@ public class PlayerController : MonoBehaviour
         
         // Move the character
         characterController.Move(moveDirection * Time.deltaTime);
+
+        // Test game over screen
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            Die();
+        }
     }
 
     void Move()
@@ -83,20 +101,33 @@ public class PlayerController : MonoBehaviour
     void Die()
     {
         Debug.Log("Player died!");
-        // Implement player death logic here
+        OnPlayerDeath?.Invoke();
+        gameObject.SetActive(false);
+        gunObject.SetActive(false); // Deactivate the gun
     }
 
-    void Respawn()
+    public void Respawn()
     {
-        // Implement respawn logic here
         health = maxHealth;
         Debug.Log("Player respawned!");
+        transform.position = Vector3.zero; // Or your desired respawn position
+        gameObject.SetActive(true);
+        gunObject.SetActive(true); // Reactivate the gun
+
+        // Reset gun properties if necessary
+        if (gunScript != null)
+        {
+            gunScript.ResetGun();
+        }
+
+        // Respawn all other objects
+        GameManager.Instance.RespawnAllObjects();
     }
 
-    void OnPlayerDefeated()
-    {
-        // Handle player defeat (e.g., play animation, disable controls)
-        Debug.Log("Player defeated!");
-        // You might want to respawn the player or end the game here
-    }
+    // void OnPlayerDefeated()
+    // {
+    //     // Handle player defeat (e.g., play animation, disable controls)
+    //     Debug.Log("Player defeated!");
+    //     // You might want to respawn the player or end the game here
+    // }
 }
