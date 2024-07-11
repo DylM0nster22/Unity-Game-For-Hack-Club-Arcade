@@ -1,80 +1,94 @@
 using UnityEngine;
-using System.Collections;
+using UnityEngine.AI;
 
 public class EnemyAI : MonoBehaviour
 {
-    public Transform player;
     public float detectionRange = 20f;
-    public float attackRange = 10f;
-    public float moveSpeed = 3f;
-    public Gun enemyGun;
-    public Health health;
-    public HealthBar healthBar;
+    public float shootingRange = 10f;
+    public float movementSpeed = 3f;
+    public float rotationSpeed = 5f;
+    public float shootingCooldown = 1f;
 
-    private bool isAttacking = false;
+    private Transform player;
+    private NavMeshAgent agent;
+    private Gun gun;
+    private Health health;
+    private float lastShotTime;
+    public Transform gunPivot;
+    public Vector3 gunForwardDirection = Vector3.forward;
 
     void Start()
     {
-        if (enemyGun == null)
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        agent = GetComponent<NavMeshAgent>();
+        gun = GetComponentInChildren<Gun>();
+        health = GetComponent<Health>();
+
+        if (gun != null)
         {
-            enemyGun = GetComponentInChildren<Gun>();
+            gun.isPlayerGun = false; // Set this to false for enemy gun
         }
-        if (health == null)
+
+        if (agent != null)
         {
-            health = GetComponent<Health>();
+            agent.speed = movementSpeed;
         }
-        if (healthBar == null)
+
+        if (gunPivot == null)
         {
-            healthBar = GetComponentInChildren<HealthBar>();
+            gunPivot = gun.transform;
         }
+
+        lastShotTime = -shootingCooldown; // Allow immediate shooting
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null || health.CurrentHealth <= 0) return;
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
         if (distanceToPlayer <= detectionRange)
         {
-            if (distanceToPlayer <= attackRange)
+            // Look at player
+            Vector3 direction = (player.position - transform.position).normalized;
+            Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
+
+            // Rotate gun to face player
+            Vector3 gunDirection = player.position - gunPivot.position;
+            Quaternion targetRotation = Quaternion.LookRotation(gunDirection, Vector3.up) * Quaternion.FromToRotation(Vector3.forward, gunForwardDirection);
+            gunPivot.rotation = Quaternion.Slerp(gunPivot.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+
+            if (distanceToPlayer <= shootingRange)
             {
-                if (!isAttacking)
+                // Stop moving and shoot
+                agent.isStopped = true;
+                if (Time.time - lastShotTime >= shootingCooldown)
                 {
-                    StartCoroutine(AttackPlayer());
+                    Shoot();
                 }
             }
             else
             {
-                MoveTowardsPlayer();
+                // Move towards player
+                agent.isStopped = false;
+                agent.SetDestination(player.position);
             }
         }
-    }
-
-    void MoveTowardsPlayer()
-    {
-        Vector3 direction = (player.position - transform.position).normalized;
-        transform.position += direction * moveSpeed * Time.deltaTime;
-        transform.LookAt(player);
-    }
-
-    IEnumerator AttackPlayer()
-    {
-        isAttacking = true;
-        while (Vector3.Distance(transform.position, player.position) <= attackRange)
+        else
         {
-            AimAtPlayer();
-            enemyGun.Shoot();
-            yield return new WaitForSeconds(enemyGun.reloadTime);
+            // Stop moving if player is out of detection range
+            agent.isStopped = true;
         }
-        isAttacking = false;
     }
 
-    void AimAtPlayer()
+    void Shoot()
     {
-        Vector3 directionToPlayer = (player.position - enemyGun.bulletSpawn.position).normalized;
-        Quaternion lookRotation = Quaternion.LookRotation(directionToPlayer);
-        enemyGun.transform.rotation = lookRotation;
-        enemyGun.transform.Rotate(0, 90, 0); // Adjust this based on your gun's initial orientation
+        if (gun != null)
+        {
+            gun.Shoot();
+            lastShotTime = Time.time;
+        }
     }
 }
