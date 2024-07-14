@@ -13,7 +13,6 @@ public class PlayerController : MonoBehaviour
     public int maxHealth = 100;
     public int health;
 
-
     [SerializeField]
     private GameObject playerCamera;
 
@@ -21,6 +20,9 @@ public class PlayerController : MonoBehaviour
 
     public GameObject gunObject; // Reference to the gun GameObject
     private Gun gunScript; // Reference to the Gun script
+
+    // Reference to the mesh renderer model
+    public GameObject meshModel;
 
     void Start()
     {
@@ -68,6 +70,12 @@ public class PlayerController : MonoBehaviour
         float z = Input.GetAxis("Vertical") * speed + Input.GetAxis("JoystickVertical") * speed;
         Vector3 move = transform.right * x + transform.forward * z;
         moveDirection = new Vector3(move.x, moveDirection.y, move.z);
+
+        // Update mesh model position to match CharacterController
+        if (meshModel != null)
+        {
+            meshModel.transform.position = transform.position;
+        }
     }
 
     void CameraLook()
@@ -123,11 +131,4 @@ public class PlayerController : MonoBehaviour
         // Respawn all other objects
         GameManager.Instance.RespawnAllObjects();
     }
-
-    // void OnPlayerDefeated()
-    // {
-    //     // Handle player defeat (e.g., play animation, disable controls)
-    //     Debug.Log("Player defeated!");
-    //     // You might want to respawn the player or end the game here
-    // }
 }
