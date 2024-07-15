@@ -1,122 +1,182 @@
 using UnityEngine;
+using System.Collections;
 using UnityEngine.AI;
 
-public class EnemyAI : MonoBehaviour
+public class Enemy : MonoBehaviour
 {
-    public float detectionRange = 20f;
-    public float shootingRange = 10f;
-    public float movementSpeed = 3f;
-    public float rotationSpeed = 5f;
-    public float shootingCooldown = 1f;
+    public NavMeshAgent navAgent;
+    public Transform player;
+    public LayerMask groundLayer, playerLayer;
+    public float health;
+    public float walkPointRange;
+    public float timeBetweenAttacks;
+    public float sightRange;
+    public float attackRange;
+    public int damage;
+    public Gun enemyGun; // Reference to the Gun script
 
-    private Transform player;
-    private NavMeshAgent agent;
-    private Gun gun;
-    private Health health;
-    private float lastShotTime;
-    public Transform gunPivot;
-    public Vector3 gunForwardDirection = Vector3.forward;
+    private Vector3 walkPoint;
+    private bool walkPointSet;
+    private bool alreadyAttacked;
+    private bool takeDamage;
 
-    // New variables for gun rotation
-    public Vector3 gunRotationOffset = Vector3.zero;
+    private float initialHealth;
 
-    void Start()
+    private void Awake()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-        agent = GetComponent<NavMeshAgent>();
-        gun = GetComponentInChildren<Gun>();
-        health = GetComponent<Health>();
+        player = GameObject.Find("Player")?.transform;
+        navAgent = GetComponent<NavMeshAgent>();
+        enemyGun = GetComponentInChildren<Gun>(); // Assuming the gun is a child of the enemy
 
-        if (gun != null)
+        if (player == null)
         {
-            gun.isPlayerGun = false; // Set this to false for enemy gun
+            Debug.LogError("Player not found. Ensure there is a GameObject named 'Player' in the scene.");
         }
 
-        if (agent != null)
+        if (navAgent == null)
         {
-            agent.speed = movementSpeed;
+            Debug.LogError("NavMeshAgent component not found on the enemy.");
         }
 
-        if (gunPivot == null)
+        if (enemyGun == null)
         {
-            gunPivot = gun.transform;
+            Debug.LogError("Gun component not found on the enemy.");
         }
 
-        // Correct the initial rotation of the enemy model
-        transform.localRotation = Quaternion.Euler(0, 0, 0);
-
-        // Apply initial rotation offset to the gun
-        gunPivot.localRotation = Quaternion.Euler(gunRotationOffset);
-
-        lastShotTime = -shootingCooldown; // Allow immediate shooting
+        initialHealth = health; // Store the initial health value
     }
 
-    void Update()
+    private void Update()
     {
-        if (player == null || health.CurrentHealth <= 0) return;
+        bool playerInSightRange = Physics.CheckSphere(transform.position, sightRange, playerLayer);
+        bool playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerLayer);
 
-        // Ensure the enemy model stays upright
-        transform.localRotation = Quaternion.Euler(0, transform.localRotation.eulerAngles.y, 0);
-
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-
-        if (distanceToPlayer <= detectionRange)
+        if (!playerInSightRange && !playerInAttackRange)
         {
-            // Look at player
-            Vector3 direction = (player.position - transform.position).normalized;
-            Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
-            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
-
-            // Rotate gun to face player
-            Vector3 gunDirection = player.position - gunPivot.position;
-            Quaternion targetRotation = Quaternion.LookRotation(gunDirection, Vector3.up) * Quaternion.FromToRotation(Vector3.forward, gunForwardDirection);
-            gunPivot.rotation = Quaternion.Slerp(gunPivot.rotation, targetRotation, Time.deltaTime * rotationSpeed);
-
-            if (distanceToPlayer <= shootingRange)
-            {
-                // Stop moving and shoot
-                agent.isStopped = true;
-                if (Time.time - lastShotTime >= shootingCooldown)
-                {
-                    Shoot();
-                }
-            }
-            else
-            {
-                // Move towards player
-                agent.isStopped = false;
-                agent.SetDestination(player.position);
-            }
+            Patroling();
         }
-        else
+        else if (playerInSightRange && !playerInAttackRange)
         {
-            // Stop moving if player is out of detection range
-            agent.isStopped = true;
+            ChasePlayer();
+        }
+        else if (playerInAttackRange && playerInSightRange)
+        {
+            AttackPlayer();
+        }
+        else if (!playerInSightRange && takeDamage)
+        {
+            ChasePlayer();
         }
     }
 
-    void Shoot()
+    private void Patroling()
     {
-        if (gun != null)
+        if (!walkPointSet)
         {
-            gun.Shoot();
-            lastShotTime = Time.time;
+            SearchWalkPoint();
         }
+
+        if (walkPointSet)
+        {
+            navAgent.SetDestination(walkPoint);
+        }
+
+        Vector3 distanceToWalkPoint = transform.position - walkPoint;
+
+        if (distanceToWalkPoint.magnitude < 1f)
+        {
+            walkPointSet = false;
+        }
+    }
+
+    private void SearchWalkPoint()
+    {
+        float randomZ = Random.Range(-walkPointRange, walkPointRange);
+        float randomX = Random.Range(-walkPointRange, walkPointRange);
+        walkPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
+
+        if (Physics.Raycast(walkPoint, -transform.up, 2f, groundLayer))
+        {
+            walkPointSet = true;
+        }
+    }
+
+    private void ChasePlayer()
+    {
+        if (player != null)
+        {
+            navAgent.SetDestination(player.position);
+            navAgent.isStopped = false;
+        }
+    }
+
+    private void AttackPlayer()
+    {
+        navAgent.SetDestination(transform.position);
+
+        if (!alreadyAttacked)
+        {
+            if (player != null)
+            {
+                transform.LookAt(player.position);
+            }
+            alreadyAttacked = true;
+            Invoke(nameof(ResetAttack), timeBetweenAttacks);
+
+            // Use the gun to shoot at the player
+            if (enemyGun != null)
+            {
+                enemyGun.EnemyShoot();
+            }
+        }
+    }
+
+    private void ResetAttack()
+    {
+        alreadyAttacked = false;
+    }
+
+    public void TakeDamage(float damage)
+    {
+        health -= damage;
+        StartCoroutine(TakeDamageCoroutine());
+
+        if (health <= 0)
+        {
+            Invoke(nameof(DestroyEnemy), 0.5f);
+        }
+    }
+
+    private IEnumerator TakeDamageCoroutine()
+    {
+        takeDamage = true;
+        yield return new WaitForSeconds(2f);
+        takeDamage = false;
+    }
+
+    private void DestroyEnemy()
+    {
+        Destroy(gameObject);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, sightRange);
     }
 
     public void Respawn()
     {
-        if (health != null)
-        {
-            health.Respawn();
-        }
-        
-        if (agent != null)
-        {
-            agent.Warp(transform.position); // Reset NavMeshAgent position
-            agent.isStopped = false;
-        }
+        // Reset position
+        transform.position = Vector3.zero; // Example: reset position to origin
 
-        lastShotTime = -shootingCooldown; // Allow immediate shooting after respawn
+        // Reset health
+        health = initialHealth;
+
+        // Reset other properties as needed
+        alreadyAttacked = false;
+        takeDamage = false;
     }
 }
