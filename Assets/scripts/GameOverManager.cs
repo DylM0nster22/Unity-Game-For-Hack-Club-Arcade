@@ -2,62 +2,62 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class GameOverManager : MonoBehaviour
+public class EndGameController : MonoBehaviour
 {
-    private GameObject gameOverScreen;
-    private Button respawnButton;
-    private Button quitButton;
+    private GameObject endGameScreen;
+    private Button retryButton;
+    private Button exitButton;
 
-    private PlayerController player;
-    private Canvas canvas;
+    private PlayerMovement player;
+    private Canvas uiCanvas;
     public Font customFont; // Assign this in the Unity Inspector
 
     void Start()
     {
-        Debug.Log("GameOverManager Start");
-        player = FindObjectOfType<PlayerController>();
+        Debug.Log("EndGameController Start");
+        player = FindObjectOfType<PlayerMovement>();
         if (player == null)
         {
-            Debug.LogError("PlayerController not found!");
+            Debug.LogError("PlayerMovement not found!");
         }
-        CreateGameOverScreen();
+        CreateEndGameScreen();
 
-        PlayerController.OnPlayerDeath += ShowGameOverScreen;
-        Debug.Log("GameOverManager initialized");
+        PlayerMovement.OnPlayerDeath += ShowEndGameScreen;
+        Debug.Log("EndGameController initialized");
     }
 
     void OnDestroy()
     {
-        PlayerController.OnPlayerDeath -= ShowGameOverScreen;
+        PlayerMovement.OnPlayerDeath -= ShowEndGameScreen;
     }
 
-    void CreateGameOverScreen()
+    void CreateEndGameScreen()
     {
         // Create Canvas
-        GameObject canvasObject = new GameObject("GameOverCanvas");
-        canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        GameObject canvasObject = new GameObject("EndGameCanvas");
+        uiCanvas = canvasObject.AddComponent<Canvas>();
+        uiCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvasObject.AddComponent<CanvasScaler>();
         canvasObject.AddComponent<GraphicRaycaster>();
 
-        // Create game over panel
-        gameOverScreen = CreatePanel();
-        gameOverScreen.SetActive(false);
+        // Create end game panel
+        endGameScreen = CreatePanel();
+        endGameScreen.SetActive(false);
 
         // Create "Game Over" text
         CreateText("Game Over", new Vector2(0, 100));
 
-        // Create Respawn button
-        respawnButton = CreateButton("Respawn", new Vector2(0, 0), Respawn);
+        // Create Retry button
+        retryButton = CreateButton("Retry", new Vector2(0, 0), Retry);
 
-        // Create Quit button
-        quitButton = CreateButton("Quit", new Vector2(0, -100), Quit);
+        // Create Exit button
+        exitButton = CreateButton("Exit", new Vector2(0, -100), Exit);
     }
 
     GameObject CreatePanel()
     {
-        GameObject panel = new GameObject("GameOverPanel");
-        panel.transform.SetParent(canvas.transform, false);
+        GameObject panel = new GameObject("EndGamePanel");
+        panel.transform.SetParent(uiCanvas.transform, false);
 
         Image image = panel.AddComponent<Image>();
         image.color = new Color(0, 0, 0, 0.8f);
@@ -72,8 +72,8 @@ public class GameOverManager : MonoBehaviour
 
     void CreateText(string message, Vector2 position)
     {
-        GameObject textObject = new GameObject("GameOverText");
-        textObject.transform.SetParent(gameOverScreen.transform, false);
+        GameObject textObject = new GameObject("EndGameText");
+        textObject.transform.SetParent(endGameScreen.transform, false);
 
         Text text = textObject.AddComponent<Text>();
         text.text = message;
@@ -90,7 +90,7 @@ public class GameOverManager : MonoBehaviour
     Button CreateButton(string label, Vector2 position, UnityEngine.Events.UnityAction onClick)
     {
         GameObject buttonObject = new GameObject(label + "Button");
-        buttonObject.transform.SetParent(gameOverScreen.transform, false);
+        buttonObject.transform.SetParent(endGameScreen.transform, false);
 
         Button button = buttonObject.AddComponent<Button>();
         button.onClick.AddListener(onClick);
@@ -127,23 +127,23 @@ public class GameOverManager : MonoBehaviour
         return text;
     }
 
-    void ShowGameOverScreen()
+    void ShowEndGameScreen()
     {
-        Debug.Log("Showing Game Over Screen");
-        gameOverScreen.SetActive(true);
+        Debug.Log("Showing End Game Screen");
+        endGameScreen.SetActive(true);
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
 
-    void Respawn()
+    void Retry()
     {
-        gameOverScreen.SetActive(false);
+        endGameScreen.SetActive(false);
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         player.Respawn(); // This will now respawn all objects
     }
 
-    void Quit()
+    void Exit()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }

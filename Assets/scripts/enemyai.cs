@@ -1,125 +1,129 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyAI : MonoBehaviour
+public class EnemyController : MonoBehaviour
 {
-    public float detectionRange = 20f;
-    public float shootingRange = 10f;
-    public float movementSpeed = 3f;
-    public float rotationSpeed = 5f;
-    public float shootingCooldown = 1f;
+    public NavMeshAgent navAgent;
 
-    private Transform player;
-    private NavMeshAgent agent;
-    private Gun gun;
-    private Health health;
-    private float lastShotTime;
-    public Transform gunPivot;
-    public Vector3 gunForwardDirection = Vector3.forward;
+    public Transform player;
 
-    // New variables for gun rotation
-    public Vector3 gunRotationOffset = Vector3.zero;
+    public LayerMask groundLayer, playerLayer;
 
-    // Reference to the model's transform
-    public Transform modelTransform;
+    public float health;
 
-    void Start()
+    //Patrolling
+    public Vector3 patrolPoint;
+    bool patrolPointSet;
+    public float patrolRange;
+
+    //Attacking
+    public float attackInterval;
+    bool hasAttacked;
+    public GameObject projectile;
+
+    //States
+    public float sightRange, attackRange;
+    public bool playerInSightRange, playerInAttackRange;
+
+    private void Awake()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-        agent = GetComponent<NavMeshAgent>();
-        gun = GetComponentInChildren<Gun>();
-        health = GetComponent<Health>();
-
-        if (gun != null)
-        {
-            gun.isPlayerGun = false; // Set this to false for enemy gun
-        }
-
-        if (agent != null)
-        {
-            agent.speed = movementSpeed;
-        }
-
-        if (gunPivot == null)
-        {
-            gunPivot = gun.transform;
-        }
-
-        // Apply initial rotation offset to the gun
-        gunPivot.localRotation = Quaternion.Euler(gunRotationOffset);
-
-        lastShotTime = -shootingCooldown; // Allow immediate shooting
+        player = GameObject.Find("PlayerObj").transform;
+        navAgent = GetComponent<NavMeshAgent>();
     }
 
-    void Update()
+    private void Update()
     {
-        if (player == null || health.CurrentHealth <= 0) return;
+        //Check for sight and attack range
+        playerInSightRange = Physics.CheckSphere(transform.position, sightRange, playerLayer);
+        playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerLayer);
 
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-
-        if (distanceToPlayer <= detectionRange)
-        {
-            // Look at player
-            Vector3 direction = (player.position - transform.position).normalized;
-            Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
-            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
-
-            // Rotate gun to face player
-            Vector3 gunDirection = player.position - gunPivot.position;
-            Quaternion targetRotation = Quaternion.LookRotation(gunDirection, Vector3.up) * Quaternion.FromToRotation(Vector3.forward, gunForwardDirection);
-            gunPivot.rotation = Quaternion.Slerp(gunPivot.rotation, targetRotation, Time.deltaTime * rotationSpeed);
-
-            if (distanceToPlayer <= shootingRange)
-            {
-                // Stop moving and shoot
-                agent.isStopped = true;
-                if (Time.time - lastShotTime >= shootingCooldown)
-                {
-                    Shoot();
-                }
-            }
-            else
-            {
-                // Move towards player
-                agent.isStopped = false;
-                agent.SetDestination(player.position);
-            }
-        }
-        else
-        {
-            // Stop moving if player is out of detection range
-            agent.isStopped = true;
-        }
-
-        // Ensure the model stays upright
-        if (modelTransform != null)
-        {
-            modelTransform.localRotation = Quaternion.Euler(0, 0, 0);
-        }
+        if (!playerInSightRange && !playerInAttackRange) Patrol();
+        if (playerInSightRange && !playerInAttackRange) FollowPlayer();
+        if (playerInAttackRange && playerInSightRange) EngagePlayer();
     }
 
-    void Shoot()
+    private void Patrol()
     {
-        if (gun != null)
+        if (!patrolPointSet) SearchPatrolPoint();
+
+        if (patrolPointSet)
+            navAgent.SetDestination(patrolPoint);
+
+        Vector3 distanceToPatrolPoint = transform.position - patrolPoint;
+
+        //Patrol point reached
+        if (distanceToPatrolPoint.magnitude < 1f)
+            patrolPointSet = false;
+    }
+    private void SearchPatrolPoint()
+    {
+        //Calculate random point in range
+        float randomZ = Random.Range(-patrolRange, patrolRange);
+        float randomX = Random.Range(-patrolRange, patrolRange);
+
+        patrolPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
+
+        if (Physics.Raycast(patrolPoint, -transform.up, 2f, groundLayer))
+            patrolPointSet = true;
+    }
+
+    private void FollowPlayer()
+    {
+        navAgent.SetDestination(player.position);
+    }
+
+    private void EngagePlayer()
+    {
+        //Make sure enemy doesn't move
+        navAgent.SetDestination(transform.position);
+
+        transform.LookAt(player);
+
+        if (!hasAttacked)
         {
-            gun.Shoot();
-            lastShotTime = Time.time;
+            ///Attack code here
+            Rigidbody rb = Instantiate(projectile, transform.position, Quaternion.identity).GetComponent<Rigidbody>();
+            rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
+            rb.AddForce(transform.up * 8f, ForceMode.Impulse);
+            ///End of attack code
+
+            hasAttacked = true;
+            Invoke(nameof(ResetAttack), attackInterval);
         }
+    }
+    private void ResetAttack()
+    {
+        hasAttacked = false;
+    }
+
+    public void ReceiveDamage(int damage)
+    {
+        health -= damage;
+
+        if (health <= 0) Invoke(nameof(DestroyEnemy), 0.5f);
+    }
+    private void DestroyEnemy()
+    {
+        Destroy(gameObject);
     }
 
     public void Respawn()
     {
-        if (health != null)
-        {
-            health.Respawn();
-        }
-        
-        if (agent != null)
-        {
-            agent.Warp(transform.position); // Reset NavMeshAgent position
-            agent.isStopped = false;
-        }
+        // Reset health
+        health = 100; // or whatever the default health value is
 
-        lastShotTime = -shootingCooldown; // Allow immediate shooting after respawn
+        // Reset position or other necessary states
+        patrolPointSet = false;
+        hasAttacked = false;
+        // Optionally, you can reset the position to a spawn point
+        // transform.position = spawnPoint;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, sightRange);
     }
 }

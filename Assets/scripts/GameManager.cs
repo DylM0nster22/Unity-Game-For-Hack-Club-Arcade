@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameController : MonoBehaviour
 {
-    public static GameManager Instance;
+    public static GameController Instance;
 
     private void Awake()
     {
@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void RespawnAllObjects()
+    public void RespawnAllEntities()
     {
         // Respawn all Health objects
         Health[] healthObjects = FindObjectsOfType<Health>(true);
@@ -26,9 +26,9 @@ public class GameManager : MonoBehaviour
             health.Respawn();
         }
 
-        // Respawn all EnemyAI objects
-        EnemyAI[] enemies = FindObjectsOfType<EnemyAI>(true);
-        foreach (EnemyAI enemy in enemies)
+        // Respawn all EnemyController objects
+        EnemyController[] enemies = FindObjectsOfType<EnemyController>(true);
+        foreach (EnemyController enemy in enemies)
         {
             enemy.Respawn();
         }
