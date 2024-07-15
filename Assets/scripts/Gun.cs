@@ -10,12 +10,10 @@ public class Gun : MonoBehaviour
     public float reloadTime = 2f;
     public ParticleSystem muzzleFlash;
     public int damageAmount = 10;
-    public bool isPlayerGun = true; // Variable to distinguish player's gun
-    public float fireRate = 1f; // Fire rate for enemy gun
+    public bool isPlayerGun = true; // New variable to distinguish player's gun
 
     public int bulletsLeft { get; private set; }
     private bool isReloading = false;
-    private float nextTimeToFire = 0f; // Time until the next shot can be fired
 
     void Start()
     {
@@ -47,7 +45,7 @@ public class Gun : MonoBehaviour
 
     public void Shoot()
     {
-        if (bulletsLeft <= 0 || isReloading) return;
+        if (bulletsLeft <= 0) return;
 
         GameObject bullet = Instantiate(bulletPrefab, bulletSpawn.position, bulletSpawn.rotation);
         Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
@@ -89,17 +87,10 @@ public class Gun : MonoBehaviour
 
     public void ResetGun()
     {
+        // Reset any necessary gun properties here
+        // For example:
+        
         isReloading = false;
         // Cancel any ongoing coroutines if necessary
-    }
-
-    // Method to handle enemy shooting
-    public void EnemyShoot()
-    {
-        if (Time.time >= nextTimeToFire)
-        {
-            nextTimeToFire = Time.time + 1f / fireRate;
-            Shoot();
-        }
     }
 }

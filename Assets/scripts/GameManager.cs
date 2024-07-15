@@ -26,9 +26,9 @@ public class GameManager : MonoBehaviour
             health.Respawn();
         }
 
-        // Respawn all Enemy objects
-        Enemy[] enemies = FindObjectsOfType<Enemy>(true);
-        foreach (Enemy enemy in enemies)
+        // Respawn all EnemyAI objects
+        EnemyAI[] enemies = FindObjectsOfType<EnemyAI>(true);
+        foreach (EnemyAI enemy in enemies)
         {
             enemy.Respawn();
         }
