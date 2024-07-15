@@ -5103,3 +5103,4 @@ MonoBehaviour:
   reloadTime: 2
   muzzleFlash: {fileID: 2282099876010373071}
   damageAmount: 5
+  isPlayerGun: 1

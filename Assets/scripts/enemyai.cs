@@ -42,6 +42,9 @@ public class EnemyAI : MonoBehaviour
             gunPivot = gun.transform;
         }
 
+        // Correct the initial rotation of the enemy model
+        transform.localRotation = Quaternion.Euler(0, 0, 0);
+
         // Apply initial rotation offset to the gun
         gunPivot.localRotation = Quaternion.Euler(gunRotationOffset);
 
@@ -51,6 +54,9 @@ public class EnemyAI : MonoBehaviour
     void Update()
     {
         if (player == null || health.CurrentHealth <= 0) return;
+
+        // Ensure the enemy model stays upright
+        transform.localRotation = Quaternion.Euler(0, transform.localRotation.eulerAngles.y, 0);
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
