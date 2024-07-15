@@ -30,7 +30,6 @@ public class WeaponController : MonoBehaviour
     //Graphics
     public GameObject muzzleFlash;
     public TextMeshProUGUI ammoDisplay;
-    public Vector2 ammoDisplayOffset = new Vector2(-10, -10);
 
     //bug fixing :D
     public bool allowInvoke = true;
@@ -47,7 +46,7 @@ public class WeaponController : MonoBehaviour
             RectTransform rectTransform = ammoDisplay.GetComponent<RectTransform>();
             rectTransform.anchorMin = new Vector2(1, 1);
             rectTransform.anchorMax = new Vector2(1, 1);
-            rectTransform.anchoredPosition = ammoDisplayOffset;
+            rectTransform.anchoredPosition = new Vector2(-10, -10);
             rectTransform.pivot = new Vector2(1, 1);
         }
     }
@@ -58,7 +57,9 @@ public class WeaponController : MonoBehaviour
 
         //Set ammo display, if it exists :D
         if (ammoDisplay != null)
+        {
             ammoDisplay.SetText(bulletsRemaining / bulletsPerShot + " / " + magazineCapacity / bulletsPerShot);
+        }
     }
     private void HandleInput()
     {

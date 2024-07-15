@@ -14,10 +14,6 @@ public class PlayerStatusUI : MonoBehaviour
     [Header("Health Bar Settings")]
     public float healthBarWidth = 200f;
     public float healthBarHeight = 20f;
-    public float margin = 10f;
-
-    public Vector2 healthBarOffset = new Vector2(10, 10);
-    public Vector2 healthTextOffset = new Vector2(0, 5);
 
     private PlayerMovement playerController;
 
@@ -40,7 +36,7 @@ public class PlayerStatusUI : MonoBehaviour
         RectTransform healthBarRect = healthBarBackground.rectTransform;
         healthBarRect.anchorMin = new Vector2(0, 0);
         healthBarRect.anchorMax = new Vector2(0, 0);
-        healthBarRect.anchoredPosition = new Vector2(healthBarOffset.x + healthBarWidth / 2, healthBarOffset.y + healthBarHeight / 2);
+        healthBarRect.anchoredPosition = new Vector2(healthBarWidth / 2 + 10, healthBarHeight / 2 + 10);
         healthBarRect.sizeDelta = new Vector2(healthBarWidth, healthBarHeight);
 
         // Set up the health bar fill
@@ -54,8 +50,7 @@ public class PlayerStatusUI : MonoBehaviour
         RectTransform healthTextRect = healthText.rectTransform;
         healthTextRect.anchorMin = new Vector2(0, 0);
         healthTextRect.anchorMax = new Vector2(0, 0);
-        healthTextRect.anchoredPosition = new Vector2(healthBarOffset.x + healthBarWidth / 2, 
-                                                     healthBarOffset.y + healthBarHeight + healthTextOffset.y);
+        healthTextRect.anchoredPosition = new Vector2(healthBarWidth / 2 + 10, healthBarHeight + 15);
         healthTextRect.sizeDelta = new Vector2(healthBarWidth, 20);
     }
 
