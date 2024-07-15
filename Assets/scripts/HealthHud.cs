@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class PlayerHUD : MonoBehaviour
+public class PlayerStatusUI : MonoBehaviour
 {
     public Image healthBarBackground;
     public Image healthBarFill;
@@ -16,19 +16,19 @@ public class PlayerHUD : MonoBehaviour
     public float healthBarHeight = 20f;
     public float margin = 10f;
 
-    private PlayerController playerController;
+    private PlayerMovement playerController;
 
     void Start()
     {
-        playerController = FindObjectOfType<PlayerController>();
+        playerController = FindObjectOfType<PlayerMovement>();
         
         if (playerController == null)
         {
-            Debug.LogError("PlayerController not found in the scene!");
+            Debug.LogError("PlayerMovement not found in the scene!");
         }
 
         SetupHealthBar();
-        UpdateHealthBar(playerController.health);
+        UpdateHealthBar(playerController.currentHealth);
     }
 
     void SetupHealthBar()
@@ -59,8 +59,13 @@ public class PlayerHUD : MonoBehaviour
     {
         if (playerController != null)
         {
-            UpdateHealthBar(playerController.health);
+            UpdateHealthBar(playerController.currentHealth);
         }
+    }
+
+    public void SetHealth(int currentHealth)
+    {
+        UpdateHealthBar(currentHealth);
     }
 
     void UpdateHealthBar(int currentHealth)

@@ -1,96 +1,158 @@
 using UnityEngine;
-using System.Collections;
+using TMPro;
 
-public class Gun : MonoBehaviour
+public class WeaponController : MonoBehaviour
 {
+    //bullet 
     public GameObject bulletPrefab;
-    public Transform bulletSpawn;
-    public float bulletSpeed = 20f;
-    public int magazineSize = 10;
-    public float reloadTime = 2f;
-    public ParticleSystem muzzleFlash;
-    public int damageAmount = 10;
-    public bool isPlayerGun = true; // New variable to distinguish player's gun
 
-    public int bulletsLeft { get; private set; }
-    private bool isReloading = false;
+    //bullet force
+    public float shootForce, upwardForce;
 
-    void Start()
+    //Gun stats
+    public float timeBetweenShots, spread, reloadDuration, timeBetweenBullets;
+    public int magazineCapacity, bulletsPerShot;
+    public bool allowButtonHold;
+
+    int bulletsRemaining, bulletsFired;
+
+    //Recoil
+    public Rigidbody playerRb;
+    public float recoilForce;
+
+    //bools
+    bool isShooting, canShoot, isReloading;
+
+    //Reference
+    public Camera fpsCam;
+    public Transform firePoint;
+
+    //Graphics
+    public GameObject muzzleFlash;
+    public TextMeshProUGUI ammoDisplay;
+
+    //bug fixing :D
+    public bool allowInvoke = true;
+
+    private void Awake()
     {
-        bulletsLeft = magazineSize;
-        if (muzzleFlash == null)
+        //make sure magazine is full
+        bulletsRemaining = magazineCapacity;
+        canShoot = true;
+    }
+
+    private void Update()
+    {
+        HandleInput();
+
+        //Set ammo display, if it exists :D
+        if (ammoDisplay != null)
+            ammoDisplay.SetText(bulletsRemaining / bulletsPerShot + " / " + magazineCapacity / bulletsPerShot);
+    }
+    private void HandleInput()
+    {
+        //Check if allowed to hold down button and take corresponding input
+        if (allowButtonHold) isShooting = Input.GetKey(KeyCode.Mouse0);
+        else isShooting = Input.GetKeyDown(KeyCode.Mouse0);
+
+        //Reloading 
+        if (Input.GetKeyDown(KeyCode.R) && bulletsRemaining < magazineCapacity && !isReloading) Reload();
+        //Reload automatically when trying to shoot without ammo
+        if (canShoot && isShooting && !isReloading && bulletsRemaining <= 0) Reload();
+
+        //Shooting
+        if (canShoot && isShooting && !isReloading && bulletsRemaining > 0)
         {
-            muzzleFlash = GetComponentInChildren<ParticleSystem>();
+            //Set bullets fired to 0
+            bulletsFired = 0;
+
+            Fire();
         }
     }
 
-    void Update()
+    private void Fire()
     {
-        if (isReloading)
-            return;
+        canShoot = false;
 
-        if (isPlayerGun) // Only check for input if it's the player's gun
-        {
-            if (Input.GetButtonDown("Fire1") && bulletsLeft > 0)
-            {
-                Shoot();
-            }
-
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                StartCoroutine(Reload());
-            }
-        }
-    }
-
-    public void Shoot()
-    {
-        if (bulletsLeft <= 0) return;
-
-        GameObject bullet = Instantiate(bulletPrefab, bulletSpawn.position, bulletSpawn.rotation);
-        Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
-        if (bulletRb != null)
-        {
-            bulletRb.linearVelocity = bulletSpawn.forward * bulletSpeed;
-        }
-
-        if (muzzleFlash != null)
-        {
-            muzzleFlash.Play();
-        }
-        bulletsLeft--;
-
-        // Perform raycast for hit detection
+        //Find the exact hit position using a raycast
+        Ray ray = fpsCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)); //Just a ray through the middle of your current view
         RaycastHit hit;
-        if (Physics.Raycast(bulletSpawn.position, bulletSpawn.forward, out hit))
+
+        //check if ray hits something
+        Vector3 targetPoint;
+        if (Physics.Raycast(ray, out hit))
+            targetPoint = hit.point;
+        else
+            targetPoint = ray.GetPoint(75); //Just a point far away from the player
+
+        //Calculate direction from firePoint to targetPoint
+        Vector3 directionWithoutSpread = targetPoint - firePoint.position;
+
+        //Calculate spread
+        float x = Random.Range(-spread, spread);
+        float y = Random.Range(-spread, spread);
+
+        //Calculate new direction with spread
+        Vector3 directionWithSpread = directionWithoutSpread + new Vector3(x, y, 0); //Just add spread to last direction
+
+        //Instantiate bullet/projectile
+        GameObject currentBullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity); //store instantiated bullet in currentBullet
+        //Rotate bullet to shoot direction
+        currentBullet.transform.forward = directionWithSpread.normalized;
+
+        //Add forces to bullet
+        currentBullet.GetComponent<Rigidbody>().AddForce(directionWithSpread.normalized * shootForce, ForceMode.Impulse);
+        currentBullet.GetComponent<Rigidbody>().AddForce(fpsCam.transform.up * upwardForce, ForceMode.Impulse);
+
+        //Instantiate muzzle flash, if you have one
+        if (muzzleFlash != null)
+            Instantiate(muzzleFlash, firePoint.position, Quaternion.identity);
+
+        bulletsRemaining--;
+        bulletsFired++;
+
+        //Invoke resetShot function (if not already invoked), with your timeBetweenShots
+        if (allowInvoke)
         {
-            Health healthComponent = hit.transform.GetComponent<Health>();
-            if (healthComponent != null)
-            {
-                healthComponent.TakeDamage(damageAmount);
-            }
+            Invoke("ResetShot", timeBetweenShots);
+            allowInvoke = false;
+
+            //Add recoil to player (should only be called once)
+            playerRb.AddForce(-directionWithSpread.normalized * recoilForce, ForceMode.Impulse);
         }
 
-        if (bulletsLeft <= 0)
+        //if more than one bulletsPerShot make sure to repeat fire function
+        if (bulletsFired < bulletsPerShot && bulletsRemaining > 0)
+            Invoke("Fire", timeBetweenBullets);
+
+        // Check if the bullet hits an object with health
+        if (hit.collider != null)
         {
-            StartCoroutine(Reload());
+            Health Health = hit.collider.GetComponent<Health>();
+            if (Health != null)
+            {
+                Health.TakeDamage(10); // Adjust damage value as needed
+            }
         }
     }
 
-    IEnumerator Reload()
+    private void ResetShot()
+    {
+        //Allow shooting and invoking again
+        canShoot = true;
+        allowInvoke = true;
+    }
+
+    private void Reload()
     {
         isReloading = true;
-        yield return new WaitForSeconds(reloadTime);
-        bulletsLeft = magazineSize;
-        isReloading = false;
+        Invoke("FinishReloading", reloadDuration); //Invoke FinishReloading function with your reloadDuration as delay
     }
 
-    public void ResetGun()
+    private void FinishReloading()
     {
-        // Reset any necessary gun properties here
-        // For example:
-        
+        //Fill magazine
+        bulletsRemaining = magazineCapacity;
         isReloading = false;
-        // Cancel any ongoing coroutines if necessary
     }
 }
