@@ -30,6 +30,7 @@ public class WeaponController : MonoBehaviour
     //Graphics
     public GameObject muzzleFlash;
     public TextMeshProUGUI ammoDisplay;
+    public Vector2 ammoDisplayOffset = new Vector2(-10, -10);
 
     //bug fixing :D
     public bool allowInvoke = true;
@@ -39,6 +40,16 @@ public class WeaponController : MonoBehaviour
         //make sure magazine is full
         bulletsRemaining = magazineCapacity;
         canShoot = true;
+
+        // Position ammo display in top right corner
+        if (ammoDisplay != null)
+        {
+            RectTransform rectTransform = ammoDisplay.GetComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(1, 1);
+            rectTransform.anchorMax = new Vector2(1, 1);
+            rectTransform.anchoredPosition = ammoDisplayOffset;
+            rectTransform.pivot = new Vector2(1, 1);
+        }
     }
 
     private void Update()
@@ -99,6 +110,12 @@ public class WeaponController : MonoBehaviour
         GameObject currentBullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity); //store instantiated bullet in currentBullet
         //Rotate bullet to shoot direction
         currentBullet.transform.forward = directionWithSpread.normalized;
+
+        // Add BulletLifetime component if it doesn't exist
+        if (currentBullet.GetComponent<BulletLifetime>() == null)
+        {
+            currentBullet.AddComponent<BulletLifetime>();
+        }
 
         //Add forces to bullet
         currentBullet.GetComponent<Rigidbody>().AddForce(directionWithSpread.normalized * shootForce, ForceMode.Impulse);
