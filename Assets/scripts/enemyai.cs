@@ -23,6 +23,7 @@ public class EnemyController : MonoBehaviour
     public GameObject projectilePrefab; // Change this from Rigidbody to GameObject
     public int projectileDamage = 10;
     public float shootingForce = 32f;
+    public float projectileSpeed = 20f; // Add this line
 
     //States
     public float sightRange, attackRange;
@@ -98,24 +99,28 @@ public class EnemyController : MonoBehaviour
 
         if (!hasAttacked)
         {
-            ///Attack code here
-            GameObject bullet = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-            Rigidbody rb = bullet.GetComponent<Rigidbody>();
-            EnemyProjectile enemyProjectile = bullet.GetComponent<EnemyProjectile>();
-            
-            if (enemyProjectile != null)
-            {
-                enemyProjectile.damage = projectileDamage;
-            }
-            
-            if (rb != null)
-            {
-                rb.AddForce(transform.forward * shootingForce, ForceMode.Impulse);
-            }
-            ///End of attack code
-
+            ShootAtPlayer();
             hasAttacked = true;
             Invoke(nameof(ResetAttack), attackInterval);
+        }
+    }
+
+    private void ShootAtPlayer()
+    {
+        Vector3 targetDirection = (player.position - transform.position).normalized;
+        GameObject bullet = Instantiate(projectilePrefab, transform.position + targetDirection, Quaternion.LookRotation(targetDirection));
+        Rigidbody rb = bullet.GetComponent<Rigidbody>();
+        EnemyProjectile enemyProjectile = bullet.GetComponent<EnemyProjectile>();
+        
+        if (enemyProjectile != null)
+        {
+            enemyProjectile.damage = projectileDamage;
+            enemyProjectile.speed = projectileSpeed;
+        }
+        
+        if (rb != null)
+        {
+            rb.linearVelocity = targetDirection * projectileSpeed;
         }
     }
 

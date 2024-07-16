@@ -4,46 +4,161 @@ using System.Collections;
 
 public class WeaponController : MonoBehaviour
 {
-    //bullet 
+    [Header("Bullet")]
     public GameObject bulletPrefab;
+    public float shootForce = 20f;
+    public float upwardForce;
 
-    //bullet force
-    public float shootForce, upwardForce;
-
-    //Gun stats
-    public float timeBetweenShots, spread, reloadDuration, timeBetweenBullets;
-    public int magazineCapacity, bulletsPerShot;
+    [Header("Gun Stats")]
+    public float timeBetweenShots = 0.5f;
+    public float spread;
+    public float reloadDuration;
+    public float timeBetweenBullets;
+    public int magazineCapacity = 30;
+    public int bulletsPerShot = 1;
     public bool allowButtonHold;
 
-    int bulletsRemaining, bulletsFired;
-
-    //Recoil
+    [Header("Recoil")]
     public Rigidbody playerRb;
     public float recoilForce;
 
-    //bools
-    bool isShooting, canShoot, isReloading;
-
-    //Reference
-    public Camera fpsCam;
+    [Header("References")]
+    public Camera playerCamera;
     public Transform firePoint;
 
-    //Graphics
+    [Header("Graphics")]
     public GameObject muzzleFlash;
     public TextMeshProUGUI ammoDisplay;
 
-    //bug fixing :D
-    public bool allowInvoke = true;
+    [Header("Enemy Interaction")]
+    public float enemyKnockbackForce = 2f;
 
-    public float enemyKnockbackForce = 2f; // Adjust this value to control enemy knockback
+    private int bulletsRemaining;
+    private int bulletsFired;
+    private bool isShooting, canShoot, isReloading;
+    private float nextFireTime = 0f;
 
     private void Awake()
     {
-        //make sure magazine is full
         bulletsRemaining = magazineCapacity;
         canShoot = true;
 
-        // Position ammo display in top right corner
+        SetupAmmoDisplay();
+    }
+
+    private void Update()
+    {
+        HandleInput();
+        UpdateAmmoDisplay();
+    }
+
+    private void HandleInput()
+    {
+        if (allowButtonHold) isShooting = Input.GetButton("Fire1");
+        else isShooting = Input.GetButtonDown("Fire1");
+
+        if (Input.GetKeyDown(KeyCode.R) && bulletsRemaining < magazineCapacity && !isReloading) Reload();
+        if (canShoot && isShooting && !isReloading && bulletsRemaining <= 0) Reload();
+
+        if (canShoot && isShooting && !isReloading && bulletsRemaining > 0 && Time.time >= nextFireTime)
+        {
+            bulletsFired = 0;
+            Fire();
+            nextFireTime = Time.time + timeBetweenShots;
+        }
+    }
+
+    private void Fire()
+    {
+        canShoot = false;
+
+        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        RaycastHit hit;
+
+        Vector3 targetPoint = Physics.Raycast(ray, out hit) ? hit.point : ray.GetPoint(75);
+
+        Vector3 directionWithoutSpread = targetPoint - firePoint.position;
+        Vector3 directionWithSpread = directionWithoutSpread + new Vector3(
+            Random.Range(-spread, spread),
+            Random.Range(-spread, spread),
+            0
+        );
+
+        // Update the ray to use the spread direction
+        Ray spreadRay = new Ray(firePoint.position, directionWithSpread);
+        RaycastHit spreadHit;
+        Vector3 targetPointWithSpread = Physics.Raycast(spreadRay, out spreadHit) ? spreadHit.point : spreadRay.GetPoint(75);
+
+        GameObject currentBullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.LookRotation(directionWithSpread));
+        Rigidbody bulletRb = currentBullet.GetComponent<Rigidbody>();
+
+        bulletRb.AddForce(directionWithSpread.normalized * shootForce, ForceMode.Impulse);
+        bulletRb.AddForce(playerCamera.transform.up * upwardForce, ForceMode.Impulse);
+
+        if (muzzleFlash != null) Instantiate(muzzleFlash, firePoint.position, Quaternion.identity);
+
+        bulletsRemaining--;
+        bulletsFired++;
+
+        if (bulletsFired < bulletsPerShot && bulletsRemaining > 0)
+            Invoke(nameof(Fire), timeBetweenBullets);
+
+        playerRb.AddForce(-playerCamera.transform.forward * recoilForce, ForceMode.Impulse);
+
+        if (spreadHit.collider != null)
+        {
+            EnemyController enemy = spreadHit.collider.GetComponent<EnemyController>();
+            if (enemy != null)
+            {
+                enemy.ReceiveDamage(10);
+                ApplyEnemyKnockback(enemy);
+            }
+        }
+
+        Invoke(nameof(ResetShot), timeBetweenShots);
+    }
+
+    private void ApplyEnemyKnockback(EnemyController enemy)
+    {
+        Rigidbody enemyRb = enemy.GetComponent<Rigidbody>();
+        if (enemyRb != null)
+        {
+            Vector3 knockbackDirection = (enemy.transform.position - transform.position).normalized;
+            knockbackDirection.y = 0;
+            enemyRb.AddForce(knockbackDirection * enemyKnockbackForce, ForceMode.Impulse);
+            StartCoroutine(LimitEnemyVelocity(enemyRb));
+        }
+    }
+
+    private IEnumerator LimitEnemyVelocity(Rigidbody enemyRb)
+    {
+        yield return new WaitForFixedUpdate();
+        float maxVelocity = 5f;
+        if (enemyRb.linearVelocity.magnitude > maxVelocity)
+        {
+            enemyRb.linearVelocity = enemyRb.linearVelocity.normalized * maxVelocity;
+        }
+    }
+
+    private void ResetShot()
+    {
+        canShoot = true;
+    }
+
+    private void Reload()
+    {
+        isReloading = true;
+        Invoke(nameof(FinishReloading), reloadDuration);
+    }
+
+    private void FinishReloading()
+    {
+        bulletsRemaining = magazineCapacity;
+        isReloading = false;
+    }
+
+    private void SetupAmmoDisplay()
+    {
         if (ammoDisplay != null)
         {
             RectTransform rectTransform = ammoDisplay.GetComponent<RectTransform>();
@@ -54,149 +169,11 @@ public class WeaponController : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void UpdateAmmoDisplay()
     {
-        HandleInput();
-
-        //Set ammo display, if it exists :D
         if (ammoDisplay != null)
         {
-            ammoDisplay.SetText(bulletsRemaining / bulletsPerShot + " / " + magazineCapacity / bulletsPerShot);
+            ammoDisplay.SetText($"{bulletsRemaining / bulletsPerShot} / {magazineCapacity / bulletsPerShot}");
         }
-    }
-
-    private void HandleInput()
-    {
-        //Check if allowed to hold down button and take corresponding input
-        if (allowButtonHold) isShooting = Input.GetKey(KeyCode.Mouse0);
-        else isShooting = Input.GetKeyDown(KeyCode.Mouse0);
-
-        //Reloading 
-        if (Input.GetKeyDown(KeyCode.R) && bulletsRemaining < magazineCapacity && !isReloading) Reload();
-        //Reload automatically when trying to shoot without ammo
-        if (canShoot && isShooting && !isReloading && bulletsRemaining <= 0) Reload();
-
-        //Shooting
-        if (canShoot && isShooting && !isReloading && bulletsRemaining > 0)
-        {
-            //Set bullets fired to 0
-            bulletsFired = 0;
-
-            Fire();
-        }
-    }
-
-    private void Fire()
-    {
-        canShoot = false;
-
-        //Find the exact hit position using a raycast
-        Ray ray = fpsCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)); //Just a ray through the middle of your current view
-        RaycastHit hit;
-
-        //check if ray hits something
-        Vector3 targetPoint;
-        if (Physics.Raycast(ray, out hit))
-            targetPoint = hit.point;
-        else
-            targetPoint = ray.GetPoint(75); //Just a point far away from the player
-
-        //Calculate direction from firePoint to targetPoint
-        Vector3 directionWithoutSpread = targetPoint - firePoint.position;
-
-        //Calculate spread
-        float x = Random.Range(-spread, spread);
-        float y = Random.Range(-spread, spread);
-
-        //Calculate new direction with spread
-        Vector3 directionWithSpread = directionWithoutSpread + new Vector3(x, y, 0); //Just add spread to last direction
-
-        //Instantiate bullet/projectile
-        GameObject currentBullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity); //store instantiated bullet in currentBullet
-        //Rotate bullet to shoot direction
-        currentBullet.transform.forward = directionWithSpread.normalized;
-
-        // Add BulletLifetime component if it doesn't exist
-        if (currentBullet.GetComponent<BulletLifetime>() == null)
-        {
-            currentBullet.AddComponent<BulletLifetime>();
-        }
-
-        //Add forces to bullet
-        currentBullet.GetComponent<Rigidbody>().AddForce(directionWithSpread.normalized * shootForce, ForceMode.Impulse);
-        currentBullet.GetComponent<Rigidbody>().AddForce(fpsCam.transform.up * upwardForce, ForceMode.Impulse);
-
-        //Instantiate muzzle flash, if you have one
-        if (muzzleFlash != null)
-            Instantiate(muzzleFlash, firePoint.position, Quaternion.identity);
-
-        bulletsRemaining--;
-        bulletsFired++;
-
-        //Invoke resetShot function (if not already invoked), with your timeBetweenShots
-        if (allowInvoke)
-        {
-            Invoke("ResetShot", timeBetweenShots);
-            allowInvoke = false;
-
-            //Add recoil to player (should only be called once)
-            playerRb.AddForce(-fpsCam.transform.forward * recoilForce, ForceMode.Impulse);
-        }
-
-        //if more than one bulletsPerShot make sure to repeat fire function
-        if (bulletsFired < bulletsPerShot && bulletsRemaining > 0)
-            Invoke("Fire", timeBetweenBullets);
-
-        // Check if the bullet hits an object with health
-        if (hit.collider != null)
-        {
-            EnemyController enemy = hit.collider.GetComponent<EnemyController>();
-            if (enemy != null)
-            {
-                enemy.ReceiveDamage(10); // Adjust damage value as needed
-                
-                // Apply knockback to the enemy
-                Rigidbody enemyRb = enemy.GetComponent<Rigidbody>();
-                if (enemyRb != null)
-                {
-                    Vector3 knockbackDirection = (enemy.transform.position - transform.position).normalized;
-                    knockbackDirection.y = 0; // Prevent vertical knockback
-                    enemyRb.AddForce(knockbackDirection * enemyKnockbackForce, ForceMode.Impulse);
-                    
-                    // Limit the enemy's velocity after knockback
-                    StartCoroutine(LimitEnemyVelocity(enemyRb));
-                }
-            }
-        }
-    }
-
-    private IEnumerator LimitEnemyVelocity(Rigidbody enemyRb)
-    {
-        yield return new WaitForFixedUpdate();
-        float maxVelocity = 5f; // Adjust this value to control the maximum knockback speed
-        if (enemyRb.linearVelocity.magnitude > maxVelocity)
-        {
-            enemyRb.linearVelocity = enemyRb.linearVelocity.normalized * maxVelocity;
-        }
-    }
-
-    private void ResetShot()
-    {
-        //Allow shooting and invoking again
-        canShoot = true;
-        allowInvoke = true;
-    }
-
-    private void Reload()
-    {
-        isReloading = true;
-        Invoke("FinishReloading", reloadDuration); //Invoke FinishReloading function with your reloadDuration as delay
-    }
-
-    private void FinishReloading()
-    {
-        //Fill magazine
-        bulletsRemaining = magazineCapacity;
-        isReloading = false;
     }
 }
