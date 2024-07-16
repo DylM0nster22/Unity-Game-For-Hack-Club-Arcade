@@ -4,12 +4,13 @@ using UnityEngine.AI;
 public class EnemyController : MonoBehaviour
 {
     public NavMeshAgent navAgent;
-
     public Transform player;
-
     public LayerMask groundLayer, playerLayer;
 
-    public float health;
+    // Reference to the HealthBar script
+    public HealthBar healthBar;
+
+    private Health healthComponent;
 
     //Patrolling
     public Vector3 patrolPoint;
@@ -29,6 +30,19 @@ public class EnemyController : MonoBehaviour
     {
         player = GameObject.Find("PlayerObj").transform;
         navAgent = GetComponent<NavMeshAgent>();
+
+        // Get or add the Health component
+        healthComponent = GetComponent<Health>();
+        if (healthComponent == null)
+        {
+            healthComponent = gameObject.AddComponent<Health>();
+        }
+
+        // Link the Health component to the HealthBar
+        if (healthBar != null)
+        {
+            healthBar.SetHealthComponent(healthComponent);
+        }
     }
 
     private void Update()
@@ -55,6 +69,7 @@ public class EnemyController : MonoBehaviour
         if (distanceToPatrolPoint.magnitude < 1f)
             patrolPointSet = false;
     }
+
     private void SearchPatrolPoint()
     {
         //Calculate random point in range
@@ -84,13 +99,13 @@ public class EnemyController : MonoBehaviour
             ///Attack code here
             Rigidbody rb = Instantiate(projectile, transform.position, Quaternion.identity).GetComponent<Rigidbody>();
             rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
-            rb.AddForce(transform.up * 8f, ForceMode.Impulse);
             ///End of attack code
 
             hasAttacked = true;
             Invoke(nameof(ResetAttack), attackInterval);
         }
     }
+
     private void ResetAttack()
     {
         hasAttacked = false;
@@ -98,10 +113,14 @@ public class EnemyController : MonoBehaviour
 
     public void ReceiveDamage(int damage)
     {
-        health -= damage;
+        healthComponent.TakeDamage(damage);
 
-        if (health <= 0) Invoke(nameof(DestroyEnemy), 0.5f);
+        if (healthComponent.CurrentHealth <= 0)
+        {
+            Invoke(nameof(DestroyEnemy), 0.5f);
+        }
     }
+
     private void DestroyEnemy()
     {
         Destroy(gameObject);
@@ -109,14 +128,7 @@ public class EnemyController : MonoBehaviour
 
     public void Respawn()
     {
-        // Reset health
-        health = 100; // or whatever the default health value is
-
-        // Reset position or other necessary states
-        patrolPointSet = false;
-        hasAttacked = false;
-        // Optionally, you can reset the position to a spawn point
-        // transform.position = spawnPoint;
+        healthComponent.Respawn();
     }
 
     private void OnDrawGizmosSelected()

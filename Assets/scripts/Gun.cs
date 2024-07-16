@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class WeaponController : MonoBehaviour
 {
@@ -34,6 +35,8 @@ public class WeaponController : MonoBehaviour
     //bug fixing :D
     public bool allowInvoke = true;
 
+    public float enemyKnockbackForce = 2f; // Adjust this value to control enemy knockback
+
     private void Awake()
     {
         //make sure magazine is full
@@ -61,6 +64,7 @@ public class WeaponController : MonoBehaviour
             ammoDisplay.SetText(bulletsRemaining / bulletsPerShot + " / " + magazineCapacity / bulletsPerShot);
         }
     }
+
     private void HandleInput()
     {
         //Check if allowed to hold down button and take corresponding input
@@ -136,7 +140,7 @@ public class WeaponController : MonoBehaviour
             allowInvoke = false;
 
             //Add recoil to player (should only be called once)
-            playerRb.AddForce(-directionWithSpread.normalized * recoilForce, ForceMode.Impulse);
+            playerRb.AddForce(-fpsCam.transform.forward * recoilForce, ForceMode.Impulse);
         }
 
         //if more than one bulletsPerShot make sure to repeat fire function
@@ -146,11 +150,33 @@ public class WeaponController : MonoBehaviour
         // Check if the bullet hits an object with health
         if (hit.collider != null)
         {
-            Health Health = hit.collider.GetComponent<Health>();
-            if (Health != null)
+            EnemyController enemy = hit.collider.GetComponent<EnemyController>();
+            if (enemy != null)
             {
-                Health.TakeDamage(10); // Adjust damage value as needed
+                enemy.ReceiveDamage(10); // Adjust damage value as needed
+                
+                // Apply knockback to the enemy
+                Rigidbody enemyRb = enemy.GetComponent<Rigidbody>();
+                if (enemyRb != null)
+                {
+                    Vector3 knockbackDirection = (enemy.transform.position - transform.position).normalized;
+                    knockbackDirection.y = 0; // Prevent vertical knockback
+                    enemyRb.AddForce(knockbackDirection * enemyKnockbackForce, ForceMode.Impulse);
+                    
+                    // Limit the enemy's velocity after knockback
+                    StartCoroutine(LimitEnemyVelocity(enemyRb));
+                }
             }
+        }
+    }
+
+    private IEnumerator LimitEnemyVelocity(Rigidbody enemyRb)
+    {
+        yield return new WaitForFixedUpdate();
+        float maxVelocity = 5f; // Adjust this value to control the maximum knockback speed
+        if (enemyRb.linearVelocity.magnitude > maxVelocity)
+        {
+            enemyRb.linearVelocity = enemyRb.linearVelocity.normalized * maxVelocity;
         }
     }
 

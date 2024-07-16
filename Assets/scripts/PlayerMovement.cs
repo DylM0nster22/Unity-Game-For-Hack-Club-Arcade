@@ -318,3 +318,22 @@ public class PlayerMovement : MonoBehaviour
         transform.Rotate(Vector3.up * mouseX);
     }
 }
+
+public class PlayerShooting : MonoBehaviour
+{
+    public GameObject projectilePrefab;
+    public Transform shootPoint;
+    public float shootForce = 20f;
+
+    private void Shoot()
+    {
+        GameObject projectile = Instantiate(projectilePrefab, shootPoint.position, shootPoint.rotation);
+        Rigidbody projectileRb = projectile.GetComponent<Rigidbody>();
+
+        // Ensure the projectile does not collide with the player
+        Physics.IgnoreCollision(projectile.GetComponent<Collider>(), GetComponent<Collider>());
+
+        // Apply force to the projectile
+        projectileRb.AddForce(shootPoint.forward * shootForce, ForceMode.Impulse);
+    }
+}

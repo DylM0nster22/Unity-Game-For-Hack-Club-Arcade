@@ -3,7 +3,6 @@ using UnityEngine.UI;
 
 public class HealthBar : MonoBehaviour
 {
-    public Health health;
     public Vector2 healthBarSize = new Vector2(100, 10); // Public variable for health bar size
     public Vector3 offset = new Vector3(0, 2, 0); // Public variable for offset
     public Color fullHealthColor = Color.green;
@@ -14,6 +13,8 @@ public class HealthBar : MonoBehaviour
     private Text healthText;
     private Image healthBarImage;
     private Camera mainCamera;
+
+    private Health healthComponent;
 
     void Start()
     {
@@ -71,7 +72,7 @@ public class HealthBar : MonoBehaviour
 
     void Update()
     {
-        if (health != null && healthBarRect != null && healthText != null)
+        if (healthBarRect != null && healthText != null && healthComponent != null)
         {
             // Update the health bar position to follow the enemy with offset
             healthBarCanvas.transform.position = transform.position + offset;
@@ -79,13 +80,19 @@ public class HealthBar : MonoBehaviour
             // Rotate the health bar to face the main camera
             healthBarCanvas.transform.rotation = mainCamera.transform.rotation;
 
-            float healthPercentage = (float)health.CurrentHealth / health.maxHealth;
+            float healthPercentage = (float)healthComponent.CurrentHealth / healthComponent.MaxHealth;
+            healthPercentage = Mathf.Clamp01(healthPercentage);
             healthBarRect.localScale = new Vector3(healthPercentage, 1, 1);
 
-            healthText.text = health.CurrentHealth.ToString();
+            healthText.text = healthComponent.CurrentHealth.ToString();
 
             Color healthColor = Color.Lerp(zeroHealthColor, fullHealthColor, healthPercentage);
             healthBarImage.color = healthColor;
         }
+    }
+
+    public void SetHealthComponent(Health health)
+    {
+        healthComponent = health;
     }
 }
