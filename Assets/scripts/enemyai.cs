@@ -20,7 +20,9 @@ public class EnemyController : MonoBehaviour
     //Attacking
     public float attackInterval;
     bool hasAttacked;
-    public GameObject projectile;
+    public GameObject projectilePrefab; // Change this from Rigidbody to GameObject
+    public int projectileDamage = 10;
+    public float shootingForce = 32f;
 
     //States
     public float sightRange, attackRange;
@@ -97,8 +99,19 @@ public class EnemyController : MonoBehaviour
         if (!hasAttacked)
         {
             ///Attack code here
-            Rigidbody rb = Instantiate(projectile, transform.position, Quaternion.identity).GetComponent<Rigidbody>();
-            rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
+            GameObject bullet = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+            Rigidbody rb = bullet.GetComponent<Rigidbody>();
+            EnemyProjectile enemyProjectile = bullet.GetComponent<EnemyProjectile>();
+            
+            if (enemyProjectile != null)
+            {
+                enemyProjectile.damage = projectileDamage;
+            }
+            
+            if (rb != null)
+            {
+                rb.AddForce(transform.forward * shootingForce, ForceMode.Impulse);
+            }
             ///End of attack code
 
             hasAttacked = true;
