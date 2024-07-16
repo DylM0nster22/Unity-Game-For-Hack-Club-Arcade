@@ -4,7 +4,7 @@ public class EnemyProjectile : MonoBehaviour
 {
     public int damage = 10;
     public float lifetime = 5f;
-    public float speed = 20f; // Added this line
+    public float speed = 20f;
 
     private void Start()
     {
@@ -13,27 +13,16 @@ public class EnemyProjectile : MonoBehaviour
 
     private void Update()
     {
-        // Move the projectile forward
         transform.Translate(Vector3.forward * speed * Time.deltaTime);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Projectile collided with: " + collision.gameObject.name);
-
-        if (collision.gameObject.CompareTag("Player"))
+        PlayerMovement player = collision.gameObject.GetComponent<PlayerMovement>();
+        if (player != null)
         {
-            Debug.Log("Hit player!");
-            Health playerHealth = collision.gameObject.GetComponent<Health>();
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(damage);
-                Debug.Log("Dealt " + damage + " damage to player");
-            }
-            else
-            {
-                Debug.LogWarning("Player does not have a Health component!");
-            }
+            player.TakeDamage(damage);
+            Debug.Log("Dealt " + damage + " damage to player");
         }
         Destroy(gameObject);
     }

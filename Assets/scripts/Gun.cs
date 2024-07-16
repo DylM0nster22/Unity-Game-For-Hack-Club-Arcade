@@ -8,6 +8,7 @@ public class WeaponController : MonoBehaviour
     public GameObject bulletPrefab;
     public float shootForce = 20f;
     public float upwardForce;
+    public int bulletDamage = 10; // Added this line
 
     [Header("Gun Stats")]
     public float timeBetweenShots = 0.5f;
@@ -84,16 +85,18 @@ public class WeaponController : MonoBehaviour
             0
         );
 
-        // Update the ray to use the spread direction
-        Ray spreadRay = new Ray(firePoint.position, directionWithSpread);
-        RaycastHit spreadHit;
-        Vector3 targetPointWithSpread = Physics.Raycast(spreadRay, out spreadHit) ? spreadHit.point : spreadRay.GetPoint(75);
-
         GameObject currentBullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.LookRotation(directionWithSpread));
-        Rigidbody bulletRb = currentBullet.GetComponent<Rigidbody>();
-
-        bulletRb.AddForce(directionWithSpread.normalized * shootForce, ForceMode.Impulse);
-        bulletRb.AddForce(playerCamera.transform.up * upwardForce, ForceMode.Impulse);
+        PlayerProjectile playerProjectile = currentBullet.GetComponent<PlayerProjectile>();
+        
+        if (playerProjectile != null)
+        {
+            playerProjectile.damage = bulletDamage;
+            playerProjectile.speed = shootForce;
+        }
+        else
+        {
+            Debug.LogWarning("PlayerProjectile component not found on bullet prefab!");
+        }
 
         if (muzzleFlash != null) Instantiate(muzzleFlash, firePoint.position, Quaternion.identity);
 
@@ -104,16 +107,6 @@ public class WeaponController : MonoBehaviour
             Invoke(nameof(Fire), timeBetweenBullets);
 
         playerRb.AddForce(-playerCamera.transform.forward * recoilForce, ForceMode.Impulse);
-
-        if (spreadHit.collider != null)
-        {
-            EnemyController enemy = spreadHit.collider.GetComponent<EnemyController>();
-            if (enemy != null)
-            {
-                enemy.ReceiveDamage(10);
-                ApplyEnemyKnockback(enemy);
-            }
-        }
 
         Invoke(nameof(ResetShot), timeBetweenShots);
     }

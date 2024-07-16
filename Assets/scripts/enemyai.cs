@@ -92,8 +92,8 @@ public class EnemyController : MonoBehaviour
 
     private void EngagePlayer()
     {
-        //Make sure enemy doesn't move
-        navAgent.SetDestination(transform.position);
+        // Remove the line that sets the destination to the current position
+        // navAgent.SetDestination(transform.position);
 
         transform.LookAt(player);
 
@@ -109,18 +109,12 @@ public class EnemyController : MonoBehaviour
     {
         Vector3 targetDirection = (player.position - transform.position).normalized;
         GameObject bullet = Instantiate(projectilePrefab, transform.position + targetDirection, Quaternion.LookRotation(targetDirection));
-        Rigidbody rb = bullet.GetComponent<Rigidbody>();
         EnemyProjectile enemyProjectile = bullet.GetComponent<EnemyProjectile>();
         
         if (enemyProjectile != null)
         {
             enemyProjectile.damage = projectileDamage;
             enemyProjectile.speed = projectileSpeed;
-        }
-        
-        if (rb != null)
-        {
-            rb.linearVelocity = targetDirection * projectileSpeed;
         }
     }
 
@@ -131,11 +125,15 @@ public class EnemyController : MonoBehaviour
 
     public void ReceiveDamage(int damage)
     {
-        healthComponent.TakeDamage(damage);
-
-        if (healthComponent.CurrentHealth <= 0)
+        if (healthComponent != null)
         {
-            Invoke(nameof(DestroyEnemy), 0.5f);
+            healthComponent.TakeDamage(damage);
+            Debug.Log("Enemy received " + damage + " damage");
+
+            if (healthComponent.CurrentHealth <= 0)
+            {
+                Invoke(nameof(DestroyEnemy), 0.5f);
+            }
         }
     }
 
