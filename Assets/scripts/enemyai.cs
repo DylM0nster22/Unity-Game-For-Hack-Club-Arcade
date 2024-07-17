@@ -50,6 +50,10 @@ public class EnemyController : MonoBehaviour
 
     private void Update()
     {
+        // Check if the game is paused
+        if (Time.timeScale == 0f)
+            return;
+
         //Check for sight and attack range
         playerInSightRange = Physics.CheckSphere(transform.position, sightRange, playerLayer);
         playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerLayer);

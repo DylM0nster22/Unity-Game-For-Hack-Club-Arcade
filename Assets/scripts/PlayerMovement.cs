@@ -94,6 +94,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        // Check if the game is paused
+        if (Time.timeScale == 0f)
+            return;
+
         // ground check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
 
@@ -111,6 +115,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // Check if the game is paused
+        if (Time.timeScale == 0f)
+            return;
+
         MovePlayer();
     }
 
