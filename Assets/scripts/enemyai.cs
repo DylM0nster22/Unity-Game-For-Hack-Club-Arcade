@@ -29,6 +29,9 @@ public class EnemyController : MonoBehaviour
     public float sightRange, attackRange;
     public bool playerInSightRange, playerInAttackRange;
 
+    public Transform modelTransform; // Assign this in the inspector to your model's transform
+    private Quaternion desiredRotation;
+
     private void Awake()
     {
         player = GameObject.Find("PlayerObj").transform;
@@ -46,6 +49,21 @@ public class EnemyController : MonoBehaviour
         {
             healthBar.SetHealthComponent(healthComponent);
         }
+
+        // Store the desired rotation
+        desiredRotation = modelTransform.rotation;
+
+        // Disable NavMeshAgent rotation
+        if (navAgent != null)
+        {
+            navAgent.updateRotation = false;
+        }
+    }
+
+    private void Start()
+    {
+        // Apply the initial rotation after all components are initialized
+        modelTransform.rotation = desiredRotation;
     }
 
     private void Update()
@@ -61,6 +79,18 @@ public class EnemyController : MonoBehaviour
         if (!playerInSightRange && !playerInAttackRange) Patrol();
         if (playerInSightRange && !playerInAttackRange) FollowPlayer();
         if (playerInAttackRange && playerInSightRange) EngagePlayer();
+
+        // Constantly enforce the desired rotation
+        modelTransform.rotation = desiredRotation;
+
+        // If you need to rotate the enemy to face the player, rotate only on the Y-axis
+        if (playerInSightRange || playerInAttackRange)
+        {
+            Vector3 lookDirection = player.position - transform.position;
+            lookDirection.y = 0; // This ensures rotation only on the Y-axis
+            Quaternion lookRotation = Quaternion.LookRotation(lookDirection);
+            transform.rotation = Quaternion.Euler(0, lookRotation.eulerAngles.y, 0);
+        }
     }
 
     private void Patrol()
@@ -96,10 +126,9 @@ public class EnemyController : MonoBehaviour
 
     private void EngagePlayer()
     {
-        // Remove the line that sets the destination to the current position
-        // navAgent.SetDestination(transform.position);
-
-        transform.LookAt(player);
+        // Use LookAt with the up vector to maintain upright position
+        Vector3 lookPosition = new Vector3(player.position.x, transform.position.y, player.position.z);
+        transform.LookAt(lookPosition, Vector3.up);
 
         if (!hasAttacked)
         {

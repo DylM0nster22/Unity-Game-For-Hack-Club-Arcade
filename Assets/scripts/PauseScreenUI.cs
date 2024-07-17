@@ -3,43 +3,41 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
-using System.Collections;
 using System.Collections.Generic; // Added this line
 
 public class PauseScreenUI : MonoBehaviour
 {
     private Canvas pauseCanvas;
     private bool isPaused = false;
-    private EventSystem eventSystem;
-    private GraphicRaycaster graphicRaycaster;
-    private PointerEventData pointerEventData;
-
-    // Add references to your player scripts here
+    
     public PlayerMovement playerMovement;
     public PlayerShooting playerShooting;
+    public WeaponController weaponController;
+
+    private EventSystem eventSystem;
+    private PointerEventData pointerEventData;
+    private GraphicRaycaster graphicRaycaster;
 
     void Start()
     {
         CreatePauseCanvas();
         pauseCanvas.gameObject.SetActive(false);
-        
-        // Ensure there's an EventSystem in the scene
-        eventSystem = FindObjectOfType<EventSystem>();
-        if (eventSystem == null)
-        {
-            GameObject eventSystemObj = new GameObject("EventSystem");
-            eventSystem = eventSystemObj.AddComponent<EventSystem>();
-            eventSystemObj.AddComponent<StandaloneInputModule>();
-        }
-
-        // Add GraphicRaycaster to the canvas
-        graphicRaycaster = pauseCanvas.gameObject.AddComponent<GraphicRaycaster>();
 
         // Find and assign player scripts
         if (playerMovement == null)
             playerMovement = FindObjectOfType<PlayerMovement>();
         if (playerShooting == null)
             playerShooting = FindObjectOfType<PlayerShooting>();
+        if (weaponController == null)
+            weaponController = FindObjectOfType<WeaponController>();
+
+        eventSystem = FindObjectOfType<EventSystem>();
+        if (eventSystem == null)
+        {
+            eventSystem = gameObject.AddComponent<EventSystem>();
+            gameObject.AddComponent<StandaloneInputModule>();
+        }
+        graphicRaycaster = pauseCanvas.GetComponent<GraphicRaycaster>();
     }
 
     void Update()
@@ -51,7 +49,7 @@ public class PauseScreenUI : MonoBehaviour
 
         if (isPaused)
         {
-            HandleTouchInput();
+            HandlePauseMenuInput();
         }
     }
 
@@ -126,7 +124,7 @@ public class PauseScreenUI : MonoBehaviour
         buttonObject.transform.SetParent(pauseCanvas.transform, false);
         
         Image buttonImage = buttonObject.AddComponent<Image>();
-        buttonImage.color = new Color(0.2f, 0.2f, 0.2f); // Dark gray
+        buttonImage.color = new Color(0.8f, 0.8f, 0.8f); // Light gray color
 
         Button button = buttonObject.AddComponent<Button>();
         button.targetGraphic = buttonImage;
@@ -150,7 +148,7 @@ public class PauseScreenUI : MonoBehaviour
         TextMeshProUGUI tmpText = textObject.AddComponent<TextMeshProUGUI>();
         tmpText.text = text;
         tmpText.fontSize = 24;
-        tmpText.color = Color.white;
+        tmpText.color = Color.black;
         tmpText.alignment = TextAlignmentOptions.Center;
 
         RectTransform textRect = textObject.GetComponent<RectTransform>();
@@ -168,20 +166,18 @@ public class PauseScreenUI : MonoBehaviour
         
         if (isPaused)
         {
+            Time.timeScale = 0f;
             DisablePlayerInput();
-            StartCoroutine(PauseWithDelay());
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
         else
         {
             Time.timeScale = 1f;
             EnablePlayerInput();
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
         }
-    }
-
-    IEnumerator PauseWithDelay()
-    {
-        yield return new WaitForSecondsRealtime(0.1f);
-        Time.timeScale = 0f;
     }
 
     void DisablePlayerInput()
@@ -190,6 +186,8 @@ public class PauseScreenUI : MonoBehaviour
             playerMovement.enabled = false;
         if (playerShooting != null)
             playerShooting.enabled = false;
+        if (weaponController != null)
+            weaponController.enabled = false;
     }
 
     void EnablePlayerInput()
@@ -198,6 +196,30 @@ public class PauseScreenUI : MonoBehaviour
             playerMovement.enabled = true;
         if (playerShooting != null)
             playerShooting.enabled = true;
+        if (weaponController != null)
+            weaponController.enabled = true;
+    }
+
+    void HandlePauseMenuInput()
+    {
+        if (Input.GetMouseButtonDown(0)) // Left mouse button
+        {
+            pointerEventData = new PointerEventData(eventSystem);
+            pointerEventData.position = Input.mousePosition;
+
+            List<RaycastResult> results = new List<RaycastResult>();
+            graphicRaycaster.Raycast(pointerEventData, results);
+
+            foreach (RaycastResult result in results)
+            {
+                Button button = result.gameObject.GetComponent<Button>();
+                if (button != null)
+                {
+                    button.onClick.Invoke();
+                    break;
+                }
+            }
+        }
     }
 
     void Resume()
@@ -224,32 +246,5 @@ public class PauseScreenUI : MonoBehaviour
         #else
             Application.Quit();
         #endif
-    }
-
-    void HandleTouchInput()
-    {
-        if (Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
-
-            if (touch.phase == TouchPhase.Began)
-            {
-                pointerEventData = new PointerEventData(eventSystem);
-                pointerEventData.position = touch.position;
-
-                List<RaycastResult> results = new List<RaycastResult>();
-                graphicRaycaster.Raycast(pointerEventData, results);
-
-                foreach (RaycastResult result in results)
-                {
-                    Button button = result.gameObject.GetComponent<Button>();
-                    if (button != null)
-                    {
-                        button.onClick.Invoke();
-                        break;
-                    }
-                }
-            }
-        }
     }
 }
