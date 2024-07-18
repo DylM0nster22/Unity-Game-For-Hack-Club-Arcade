@@ -68,6 +68,8 @@ public class PlayerMovement : MonoBehaviour
     public Transform playerCamera;
     private float xRotation = 0f;
 
+    private EnemyController[] enemies;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -90,6 +92,9 @@ public class PlayerMovement : MonoBehaviour
         // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Find all enemies in the scene
+        enemies = FindObjectsOfType<EnemyController>();
     }
 
     private void Update()
@@ -253,6 +258,12 @@ public class PlayerMovement : MonoBehaviour
         // Reset position or other necessary states
         // Optionally, you can reset the position to a spawn point
         // transform.position = spawnPoint;
+
+        // Respawn all enemies
+        foreach (EnemyController enemy in enemies)
+        {
+            enemy.Respawn();
+        }
     }
 
     public void TakeDamage(int damage)

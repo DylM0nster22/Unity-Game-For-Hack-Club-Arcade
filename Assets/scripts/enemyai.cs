@@ -10,7 +10,10 @@ public class EnemyController : MonoBehaviour
     // Reference to the HealthBar script
     public HealthBar healthBar;
 
-    private Health healthComponent;
+    public int maxHealth = 100;
+    public int currentHealth;
+    private bool isDead = false;
+    public float respawnDelay = 5f; // Time in seconds before the enemy respawns
 
     //Patrolling
     public Vector3 patrolPoint;
@@ -32,19 +35,23 @@ public class EnemyController : MonoBehaviour
     public Transform modelTransform; // Assign this in the inspector to your model's transform
     private Quaternion desiredRotation;
 
+    private Health healthComponent;
+
+    private Vector3 initialPosition;
+
     private void Awake()
     {
         player = GameObject.Find("PlayerObj").transform;
         navAgent = GetComponent<NavMeshAgent>();
 
-        // Get or add the Health component
-        healthComponent = GetComponent<Health>();
-        if (healthComponent == null)
-        {
-            healthComponent = gameObject.AddComponent<Health>();
-        }
+        // Initialize health
+        currentHealth = maxHealth;
 
-        // Link the Health component to the HealthBar
+        // Create a Health component and link it to the HealthBar
+        healthComponent = gameObject.AddComponent<Health>();
+        healthComponent.MaxHealth = maxHealth;
+        healthComponent.CurrentHealth = currentHealth;
+
         if (healthBar != null)
         {
             healthBar.SetHealthComponent(healthComponent);
@@ -58,12 +65,9 @@ public class EnemyController : MonoBehaviour
         {
             navAgent.updateRotation = false;
         }
-    }
 
-    private void Start()
-    {
-        // Apply the initial rotation after all components are initialized
-        modelTransform.rotation = desiredRotation;
+        // Store the initial position
+        initialPosition = transform.position;
     }
 
     private void Update()
@@ -71,6 +75,13 @@ public class EnemyController : MonoBehaviour
         // Check if the game is paused
         if (Time.timeScale == 0f)
             return;
+
+        // Check if the enemy has died
+        if (!isDead && currentHealth <= 0)
+        {
+            HandleDeath();
+            return;
+        }
 
         //Check for sight and attack range
         playerInSightRange = Physics.CheckSphere(transform.position, sightRange, playerLayer);
@@ -158,26 +169,52 @@ public class EnemyController : MonoBehaviour
 
     public void ReceiveDamage(int damage)
     {
-        if (healthComponent != null)
+        if (!isDead)
         {
-            healthComponent.TakeDamage(damage);
-            Debug.Log("Enemy received " + damage + " damage");
+            currentHealth -= damage;
+            UpdateHealthComponent();
+            Debug.Log("Enemy received " + damage + " damage. Current health: " + currentHealth);
 
-            if (healthComponent.CurrentHealth <= 0)
+            if (currentHealth <= 0)
             {
-                Invoke(nameof(DestroyEnemy), 0.5f);
+                HandleDeath();
             }
         }
     }
 
-    private void DestroyEnemy()
+    private void UpdateHealthComponent()
     {
-        Destroy(gameObject);
+        if (healthComponent != null)
+        {
+            healthComponent.CurrentHealth = currentHealth;
+        }
+    }
+
+    private void HandleDeath()
+    {
+        isDead = true;
+        // Disable the enemy temporarily
+        gameObject.SetActive(false);
+
+        // Schedule respawn
+        Invoke(nameof(Respawn), respawnDelay);
     }
 
     public void Respawn()
     {
-        healthComponent.Respawn();
+        // Reset health
+        currentHealth = maxHealth;
+        UpdateHealthComponent();
+
+        isDead = false;
+
+        // Re-enable the enemy
+        gameObject.SetActive(true);
+
+        // Reset position to the initial position
+        transform.position = initialPosition;
+
+        // ... any other respawn logic ...
     }
 
     private void OnDrawGizmosSelected()

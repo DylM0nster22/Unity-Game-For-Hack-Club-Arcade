@@ -17,15 +17,16 @@ public class GameController : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            RespawnAllEntities();
+        }
+    }
+
     public void RespawnAllEntities()
     {
-        // Respawn all Health objects
-        Health[] healthObjects = FindObjectsOfType<Health>(true);
-        foreach (Health health in healthObjects)
-        {
-            health.Respawn();
-        }
-
         // Respawn all EnemyController objects
         EnemyController[] enemies = FindObjectsOfType<EnemyController>(true);
         foreach (EnemyController enemy in enemies)

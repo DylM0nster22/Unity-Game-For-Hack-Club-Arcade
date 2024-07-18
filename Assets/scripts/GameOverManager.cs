@@ -1,150 +1,176 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using UnityEngine.SceneManagement;
 
-public class EndGameController : MonoBehaviour
+public class GameOverManager : MonoBehaviour
 {
-    private GameObject endGameScreen;
-    private Button retryButton;
-    private Button exitButton;
+    private Canvas gameOverCanvas;
+    private bool isGameOver = false;
 
-    private PlayerMovement player;
-    private Canvas uiCanvas;
-    public Font customFont; // Assign this in the Unity Inspector
+    public PlayerMovement playerMovement;
+    public PlayerShooting playerShooting;
+    public WeaponController weaponController;
 
     void Start()
     {
-        Debug.Log("EndGameController Start");
-        player = FindObjectOfType<PlayerMovement>();
-        if (player == null)
-        {
-            Debug.LogError("PlayerMovement not found!");
-        }
-        CreateEndGameScreen();
+        CreateGameOverCanvas();
+        gameOverCanvas.gameObject.SetActive(false);
 
-        PlayerMovement.OnPlayerDeath += ShowEndGameScreen;
-        Debug.Log("EndGameController initialized");
+        // Find and assign player scripts
+        if (playerMovement == null)
+            playerMovement = FindObjectOfType<PlayerMovement>();
+        if (playerShooting == null)
+            playerShooting = FindObjectOfType<PlayerShooting>();
+        if (weaponController == null)
+            weaponController = FindObjectOfType<WeaponController>();
+
+        PlayerMovement.OnPlayerDeath += ShowGameOverScreen;
     }
 
     void OnDestroy()
     {
-        PlayerMovement.OnPlayerDeath -= ShowEndGameScreen;
+        PlayerMovement.OnPlayerDeath -= ShowGameOverScreen;
     }
 
-    void CreateEndGameScreen()
+    void CreateGameOverCanvas()
     {
-        // Create Canvas
-        GameObject canvasObject = new GameObject("EndGameCanvas");
-        uiCanvas = canvasObject.AddComponent<Canvas>();
-        uiCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        GameObject canvasObject = new GameObject("GameOverCanvas");
+        gameOverCanvas = canvasObject.AddComponent<Canvas>();
+        gameOverCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        gameOverCanvas.sortingOrder = 100; // Ensure it's on top of other UI elements
         canvasObject.AddComponent<CanvasScaler>();
         canvasObject.AddComponent<GraphicRaycaster>();
 
-        // Create end game panel
-        endGameScreen = CreatePanel();
-        endGameScreen.SetActive(false);
-
-        // Create "Game Over" text
-        CreateText("Game Over", new Vector2(0, 100));
-
-        // Create Retry button
-        retryButton = CreateButton("Retry", new Vector2(0, 0), Retry);
-
-        // Create Exit button
-        exitButton = CreateButton("Exit", new Vector2(0, -100), Exit);
+        CreateBackground();
+        CreateTitle();
+        CreateRetryButton();
+        CreateQuitButton();
     }
 
-    GameObject CreatePanel()
+    void CreateBackground()
     {
-        GameObject panel = new GameObject("EndGamePanel");
-        panel.transform.SetParent(uiCanvas.transform, false);
-
-        Image image = panel.AddComponent<Image>();
-        image.color = new Color(0, 0, 0, 0.8f);
-
-        RectTransform rectTransform = panel.GetComponent<RectTransform>();
-        rectTransform.anchorMin = Vector2.zero;
-        rectTransform.anchorMax = Vector2.one;
-        rectTransform.sizeDelta = Vector2.zero;
-
-        return panel;
+        GameObject backgroundObject = new GameObject("GameOverBackground");
+        backgroundObject.transform.SetParent(gameOverCanvas.transform, false);
+        Image backgroundImage = backgroundObject.AddComponent<Image>();
+        backgroundImage.color = new Color(0, 0, 0, 0.8f); // Semi-transparent black
+        RectTransform backgroundRect = backgroundObject.GetComponent<RectTransform>();
+        backgroundRect.anchorMin = Vector2.zero;
+        backgroundRect.anchorMax = Vector2.one;
+        backgroundRect.sizeDelta = Vector2.zero;
     }
 
-    void CreateText(string message, Vector2 position)
+    void CreateTitle()
     {
-        GameObject textObject = new GameObject("EndGameText");
-        textObject.transform.SetParent(endGameScreen.transform, false);
-
-        Text text = textObject.AddComponent<Text>();
-        text.text = message;
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); // Changed from Arial.ttf
-        text.fontSize = 48;
-        text.alignment = TextAnchor.MiddleCenter;
-        text.color = Color.white;
-
-        RectTransform rectTransform = text.GetComponent<RectTransform>();
-        rectTransform.anchoredPosition = position;
-        rectTransform.sizeDelta = new Vector2(400, 100);
+        GameObject titleObject = new GameObject("GameOverTitleText");
+        titleObject.transform.SetParent(gameOverCanvas.transform, false);
+        TextMeshProUGUI titleText = titleObject.AddComponent<TextMeshProUGUI>();
+        titleText.text = "Game Over";
+        titleText.fontSize = 48;
+        titleText.color = Color.white;
+        titleText.alignment = TextAlignmentOptions.Center;
+        RectTransform titleRect = titleObject.GetComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0.5f, 0.8f);
+        titleRect.anchorMax = new Vector2(0.5f, 0.9f);
+        titleRect.sizeDelta = new Vector2(300, 60);
+        titleRect.anchoredPosition = Vector2.zero;
     }
 
-    Button CreateButton(string label, Vector2 position, UnityEngine.Events.UnityAction onClick)
+    void CreateRetryButton()
     {
-        GameObject buttonObject = new GameObject(label + "Button");
-        buttonObject.transform.SetParent(endGameScreen.transform, false);
+        CreateButton("RetryButton", "Retry", new Vector2(0.5f, 0.45f), Retry);
+    }
+
+    void CreateQuitButton()
+    {
+        CreateButton("QuitButton", "Quit", new Vector2(0.5f, 0.3f), QuitGame);
+    }
+
+    void CreateButton(string name, string text, Vector2 anchorPosition, UnityEngine.Events.UnityAction onClick)
+    {
+        GameObject buttonObject = new GameObject(name);
+        buttonObject.transform.SetParent(gameOverCanvas.transform, false);
+        
+        Image buttonImage = buttonObject.AddComponent<Image>();
+        buttonImage.color = new Color(0.8f, 0.8f, 0.8f); // Light gray color
 
         Button button = buttonObject.AddComponent<Button>();
+        button.targetGraphic = buttonImage;
+        
+        TextMeshProUGUI buttonText = CreateTextForButton(buttonObject, text);
+        
+        RectTransform buttonRect = buttonObject.GetComponent<RectTransform>();
+        buttonRect.anchorMin = anchorPosition;
+        buttonRect.anchorMax = anchorPosition;
+        buttonRect.sizeDelta = new Vector2(200, 50);
+        buttonRect.anchoredPosition = Vector2.zero;
+
         button.onClick.AddListener(onClick);
-
-        Image image = buttonObject.AddComponent<Image>();
-        image.color = new Color(0.2f, 0.2f, 0.2f);
-
-        Text text = CreateButtonText(buttonObject, label);
-
-        RectTransform rectTransform = button.GetComponent<RectTransform>();
-        rectTransform.anchoredPosition = position;
-        rectTransform.sizeDelta = new Vector2(200, 50);
-
-        return button;
     }
 
-    Text CreateButtonText(GameObject buttonObject, string label)
+    TextMeshProUGUI CreateTextForButton(GameObject buttonObject, string text)
     {
         GameObject textObject = new GameObject("Text");
         textObject.transform.SetParent(buttonObject.transform, false);
 
-        Text text = textObject.AddComponent<Text>();
-        text.text = label;
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); // Changed from Arial.ttf
-        text.fontSize = 24;
-        text.alignment = TextAnchor.MiddleCenter;
-        text.color = Color.white;
+        TextMeshProUGUI tmpText = textObject.AddComponent<TextMeshProUGUI>();
+        tmpText.text = text;
+        tmpText.fontSize = 24;
+        tmpText.color = Color.black;
+        tmpText.alignment = TextAlignmentOptions.Center;
 
-        RectTransform rectTransform = text.GetComponent<RectTransform>();
-        rectTransform.anchorMin = Vector2.zero;
-        rectTransform.anchorMax = Vector2.one;
-        rectTransform.sizeDelta = Vector2.zero;
+        RectTransform textRect = textObject.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
 
-        return text;
+        return tmpText;
     }
 
-    void ShowEndGameScreen()
+    void ShowGameOverScreen()
     {
-        Debug.Log("Showing End Game Screen");
-        endGameScreen.SetActive(true);
-        Cursor.lockState = CursorLockMode.None;
+        isGameOver = true;
+        gameOverCanvas.gameObject.SetActive(true);
+        Time.timeScale = 0f;
+        DisablePlayerInput();
         Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
+
+    void DisablePlayerInput()
+    {
+        if (playerMovement != null)
+            playerMovement.enabled = false;
+        if (playerShooting != null)
+            playerShooting.enabled = false;
+        if (weaponController != null)
+            weaponController.enabled = false;
+    }
+
+    void EnablePlayerInput()
+    {
+        if (playerMovement != null)
+            playerMovement.enabled = true;
+        if (playerShooting != null)
+            playerShooting.enabled = true;
+        if (weaponController != null)
+            weaponController.enabled = true;
     }
 
     void Retry()
     {
-        endGameScreen.SetActive(false);
-        Cursor.lockState = CursorLockMode.Locked;
+        isGameOver = false;
+        gameOverCanvas.gameObject.SetActive(false);
+        Time.timeScale = 1f;
+        EnablePlayerInput();
         Cursor.visible = false;
-        player.Respawn(); // This will now respawn all objects
+        Cursor.lockState = CursorLockMode.Locked;
+        playerMovement.Respawn();
     }
 
-    void Exit()
+    void QuitGame()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }
