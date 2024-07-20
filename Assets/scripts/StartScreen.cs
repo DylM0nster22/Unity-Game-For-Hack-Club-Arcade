@@ -4,12 +4,13 @@ using UnityEngine.SceneManagement;
 public class StartScreen : MonoBehaviour
 {
     public GameObject startScreenPanel;
+    public GameObject settingsMenu;
 
     private void Start()
     {
         // Pause the game when the start screen is active
         Time.timeScale = 0f;
-        ShowStartScreen();
+        ShowStartScreen(true);
 
         // Disable player input
         FindObjectOfType<PlayerMovement>().enabled = false;
@@ -22,16 +23,16 @@ public class StartScreen : MonoBehaviour
         }
     }
 
-    private void ShowStartScreen()
+    public void ShowStartScreen(bool show)
     {
-        startScreenPanel.SetActive(true);
+        startScreenPanel.SetActive(show);
     }
 
     public void StartGame()
     {
         // Unpause the game and hide the start screen
         Time.timeScale = 1f;
-        startScreenPanel.SetActive(false);
+        ShowStartScreen(false);
 
         // Enable player input
         FindObjectOfType<PlayerMovement>().enabled = true;
@@ -49,8 +50,12 @@ public class StartScreen : MonoBehaviour
 
     public void OpenSettings()
     {
-        // Implement settings screen logic here
         Debug.Log("Settings screen opened");
+        if (settingsMenu != null)
+        {
+            ShowStartScreen(false);
+            settingsMenu.GetComponent<SettingsMenu>().ShowSettingsMenu(true);
+        }
     }
 
     public void QuitGame()

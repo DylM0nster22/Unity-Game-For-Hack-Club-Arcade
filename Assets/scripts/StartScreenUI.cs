@@ -22,6 +22,15 @@ public class StartScreenUI : MonoBehaviour
             startScreen = gameObject.AddComponent<StartScreen>();
         }
         startScreen.startScreenPanel = canvas.gameObject;
+
+        // Ensure SettingsMenu is created and assigned
+        GameObject settingsMenuObject = GameObject.Find("SettingsMenu");
+        if (settingsMenuObject == null)
+        {
+            settingsMenuObject = new GameObject("SettingsMenu");
+            settingsMenuObject.AddComponent<SettingsMenu>();
+        }
+        startScreen.settingsMenu = settingsMenuObject;
     }
 
     void CreateCanvas()

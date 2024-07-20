@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
-using System.Collections.Generic; // Added this line
+using System.Collections.Generic;
 
 public class PauseScreenUI : MonoBehaviour
 {
@@ -13,10 +13,14 @@ public class PauseScreenUI : MonoBehaviour
     public PlayerMovement playerMovement;
     public PlayerShooting playerShooting;
     public WeaponController weaponController;
+    public GameObject settingsMenu;
 
     private EventSystem eventSystem;
     private PointerEventData pointerEventData;
     private GraphicRaycaster graphicRaycaster;
+
+    public Button settingsButton;
+    public Button restartButton;
 
     void Start()
     {
@@ -31,6 +35,10 @@ public class PauseScreenUI : MonoBehaviour
         if (weaponController == null)
             weaponController = FindObjectOfType<WeaponController>();
 
+        Debug.Log("PlayerMovement: " + (playerMovement != null));
+        Debug.Log("PlayerShooting: " + (playerShooting != null));
+        Debug.Log("WeaponController: " + (weaponController != null));
+
         eventSystem = FindObjectOfType<EventSystem>();
         if (eventSystem == null)
         {
@@ -38,18 +46,42 @@ public class PauseScreenUI : MonoBehaviour
             gameObject.AddComponent<StandaloneInputModule>();
         }
         graphicRaycaster = pauseCanvas.GetComponent<GraphicRaycaster>();
+
+        // Ensure the settings menu is initially hidden
+        if (settingsMenu != null)
+        {
+            settingsMenu.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("SettingsMenu is not assigned.");
+        }
+
+        if (settingsButton != null)
+        {
+            settingsButton.onClick.AddListener(OpenSettings);
+        }
+        else
+        {
+            Debug.LogWarning("SettingsButton is not assigned.");
+        }
+
+        if (restartButton != null)
+        {
+            restartButton.onClick.AddListener(RestartGame);
+        }
+        else
+        {
+            Debug.LogWarning("RestartButton is not assigned.");
+        }
     }
 
     void Update()
     {
+        // Check for the Escape key to toggle the pause menu
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             TogglePause();
-        }
-
-        if (isPaused)
-        {
-            HandlePauseMenuInput();
         }
     }
 
@@ -65,8 +97,8 @@ public class PauseScreenUI : MonoBehaviour
         CreateBackground();
         CreateTitle();
         CreateResumeButton();
-        CreateRestartButton();
-        CreateSettingsButton();
+        restartButton = CreateButton("RestartButton", "Restart", new Vector2(0.5f, 0.45f), RestartGame);
+        settingsButton = CreateButton("SettingsButton", "Settings", new Vector2(0.5f, 0.3f), OpenSettings);
         CreateQuitButton();
     }
 
@@ -103,22 +135,12 @@ public class PauseScreenUI : MonoBehaviour
         CreateButton("ResumeButton", "Resume", new Vector2(0.5f, 0.6f), Resume);
     }
 
-    void CreateRestartButton()
-    {
-        CreateButton("RestartButton", "Restart", new Vector2(0.5f, 0.45f), Restart);
-    }
-
-    void CreateSettingsButton()
-    {
-        CreateButton("SettingsButton", "Settings", new Vector2(0.5f, 0.3f), OpenSettings);
-    }
-
     void CreateQuitButton()
     {
         CreateButton("QuitButton", "Quit", new Vector2(0.5f, 0.15f), QuitGame);
     }
 
-    void CreateButton(string name, string text, Vector2 anchorPosition, UnityEngine.Events.UnityAction onClick)
+    Button CreateButton(string name, string text, Vector2 anchorPosition, UnityEngine.Events.UnityAction onClick)
     {
         GameObject buttonObject = new GameObject(name);
         buttonObject.transform.SetParent(pauseCanvas.transform, false);
@@ -138,6 +160,8 @@ public class PauseScreenUI : MonoBehaviour
         buttonRect.anchoredPosition = Vector2.zero;
 
         button.onClick.AddListener(onClick);
+
+        return button;
     }
 
     TextMeshProUGUI CreateTextForButton(GameObject buttonObject, string text)
@@ -227,16 +251,26 @@ public class PauseScreenUI : MonoBehaviour
         TogglePause();
     }
 
-    void Restart()
+    void RestartGame()
     {
+        Debug.Log("Restart Game");
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     void OpenSettings()
     {
-        Debug.Log("Open Settings");
-        // Implement your settings logic here
+        Debug.Log("Open Settings button pressed");
+        if (settingsMenu != null)
+        {
+            settingsMenu.SetActive(true);
+            pauseCanvas.gameObject.SetActive(false);
+            Debug.Log("Settings menu activated");
+        }
+        else
+        {
+            Debug.Log("Settings menu is null");
+        }
     }
 
     void QuitGame()
@@ -246,5 +280,26 @@ public class PauseScreenUI : MonoBehaviour
         #else
             Application.Quit();
         #endif
+    }
+
+    public void ShowPauseMenu(bool show)
+    {
+        pauseCanvas.gameObject.SetActive(show);
+        isPaused = show;
+
+        if (show)
+        {
+            Time.timeScale = 0f;
+            DisablePlayerInput();
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+        else
+        {
+            Time.timeScale = 1f;
+            EnablePlayerInput();
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
     }
 }
