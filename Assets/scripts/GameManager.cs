@@ -3,6 +3,7 @@ using UnityEngine;
 public class GameController : MonoBehaviour
 {
     public static GameController Instance;
+    public WeaponController weaponController; // Add this line
 
     private void Awake()
     {
@@ -21,7 +22,10 @@ public class GameController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.R))
         {
-            RespawnAllEntities();
+            if (weaponController != null)
+            {
+                weaponController.Reload(); // Call the reload method on the WeaponController
+            }
         }
     }
 

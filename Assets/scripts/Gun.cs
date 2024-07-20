@@ -112,6 +112,8 @@ public class WeaponController : MonoBehaviour
         bulletsRemaining--;
         bulletsFired++;
 
+        UpdateAmmoDisplay(); // Update ammo display after firing
+
         if (bulletsFired < bulletsPerShot && bulletsRemaining > 0)
             Invoke(nameof(Fire), timeBetweenBullets);
 
@@ -147,7 +149,7 @@ public class WeaponController : MonoBehaviour
         canShoot = true;
     }
 
-    private void Reload()
+    public void Reload() // Change this to public
     {
         isReloading = true;
         Invoke(nameof(FinishReloading), reloadDuration);
@@ -157,6 +159,7 @@ public class WeaponController : MonoBehaviour
     {
         bulletsRemaining = magazineCapacity;
         isReloading = false;
+        UpdateAmmoDisplay(); // Update ammo display after reloading
     }
 
     private void SetupAmmoDisplay()
@@ -175,7 +178,7 @@ public class WeaponController : MonoBehaviour
     {
         if (ammoDisplay != null)
         {
-            ammoDisplay.SetText($"{bulletsRemaining / bulletsPerShot} / {magazineCapacity / bulletsPerShot}");
+            ammoDisplay.SetText($"{bulletsRemaining} / {magazineCapacity}");
         }
     }
 }
