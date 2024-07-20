@@ -49,8 +49,17 @@ public class WeaponController : MonoBehaviour
 
     private void Update()
     {
+        if (Time.timeScale == 0f) // Game is paused
+            return;
+
         HandleInput();
         UpdateAmmoDisplay();
+    }
+
+    private void FixedUpdate()
+    {
+        if (Time.timeScale == 0f) // Game is paused
+            return;
     }
 
     private void HandleInput()
