@@ -70,6 +70,9 @@ public class PlayerMovement : MonoBehaviour
 
     private EnemyController[] enemies;
 
+    [Header("Weapon Management")]
+    public WeaponManager weaponManager;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();

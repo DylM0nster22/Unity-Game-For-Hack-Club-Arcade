@@ -34,6 +34,10 @@ public class WeaponController : MonoBehaviour
     [Header("Enemy Interaction")]
     public float enemyKnockbackForce = 2f;
 
+    [Header("Weapon Info")]
+    public string weaponName;
+    public Sprite weaponIcon;
+
     private int bulletsRemaining;
     private int bulletsFired;
     private bool isShooting, canShoot, isReloading;
