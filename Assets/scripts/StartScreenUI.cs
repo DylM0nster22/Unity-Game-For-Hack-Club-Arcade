@@ -6,6 +6,7 @@ public class StartScreenUI : MonoBehaviour
 {
     private Canvas canvas;
     private StartScreen startScreen;
+    public SettingsManager settingsManager; // Add this line
 
     void Start()
     {
@@ -23,15 +24,21 @@ public class StartScreenUI : MonoBehaviour
         }
         startScreen.startScreenPanel = canvas.gameObject;
 
-        // Ensure SettingsManager is created and assigned
-        GameObject settingsMenuObject = GameObject.Find("SettingsManager");
-        if (settingsMenuObject == null)
+        // Find the existing SettingsManager in the scene
+        if (settingsManager == null)
         {
-            // Do not create a new SettingsManager if one doesn't exist
-            // settingsMenuObject = new GameObject("SettingsManager");
-            // settingsMenuObject.AddComponent<SettingsManager>();
+            settingsManager = FindObjectOfType<SettingsManager>();
+            if (settingsManager == null)
+            {
+                Debug.LogError("SettingsManager not found in the scene. Please add a SettingsManager to your scene.");
+            }
         }
-        startScreen.settingsMenu = settingsMenuObject;
+
+        // Assign the found SettingsManager to the StartScreen
+        if (startScreen != null && settingsManager != null)
+        {
+            startScreen.settingsMenu = settingsManager.gameObject;
+        }
     }
 
     void CreateCanvas()

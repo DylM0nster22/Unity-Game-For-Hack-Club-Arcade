@@ -198,10 +198,13 @@ public class PauseScreenUI : MonoBehaviour
         }
         else
         {
-            Time.timeScale = 1f;
-            EnablePlayerInput();
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            if (!settingsManager.IsSettingsMenuActive)
+            {
+                Time.timeScale = 1f;
+                EnablePlayerInput();
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
         }
     }
 
