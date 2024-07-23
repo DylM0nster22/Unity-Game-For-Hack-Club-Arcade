@@ -27,8 +27,9 @@ public class StartScreenUI : MonoBehaviour
         GameObject settingsMenuObject = GameObject.Find("SettingsManager");
         if (settingsMenuObject == null)
         {
-            settingsMenuObject = new GameObject("SettingsManager");
-            settingsMenuObject.AddComponent<SettingsManager>();
+            // Do not create a new SettingsManager if one doesn't exist
+            // settingsMenuObject = new GameObject("SettingsManager");
+            // settingsMenuObject.AddComponent<SettingsManager>();
         }
         startScreen.settingsMenu = settingsMenuObject;
     }

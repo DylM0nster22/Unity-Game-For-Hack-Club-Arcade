@@ -26,6 +26,21 @@ public class StartScreen : MonoBehaviour
     public void ShowStartScreen(bool show)
     {
         startScreenPanel.SetActive(show);
+        if (show)
+        {
+            Time.timeScale = 0f;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+        else
+        {
+            if (!settingsMenu.GetComponent<SettingsManager>().IsSettingsMenuActive)
+            {
+                Time.timeScale = 1f;
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
+        }
     }
 
     public void StartGame()
@@ -55,6 +70,10 @@ public class StartScreen : MonoBehaviour
         {
             ShowStartScreen(false);
             settingsMenu.GetComponent<SettingsManager>().OpenSettings();
+        }
+        else
+        {
+            Debug.LogWarning("SettingsManager not assigned to StartScreen.");
         }
     }
 

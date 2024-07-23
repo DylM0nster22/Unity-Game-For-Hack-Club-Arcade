@@ -39,7 +39,7 @@ public class SettingsManager : MonoBehaviour
     public PauseScreenUI pauseScreenUI;
 
     private Resolution[] resolutions;
-    private bool _isSettingsMenuActive = false;
+    public bool IsSettingsMenuActive { get; private set; } = false;
 
     void Start()
     {
@@ -199,32 +199,46 @@ public class SettingsManager : MonoBehaviour
         // EventManager.UpdateSoundEffectVolume?.Invoke();
     }
 
-    public void ToggleSettingsMenu()
-    {
-        _isSettingsMenuActive = !_isSettingsMenuActive;
-        settingsPanel.SetActive(_isSettingsMenuActive);
-
-        if (!_isMainMenu)
-        {
-            Time.timeScale = _isSettingsMenuActive ? 0 : 1;
-        }
-
-        _anim.SetTrigger("Toggle");
-    }
-
     public void OpenSettings()
     {
         ToggleSettingsMenu();
+        // Disable other menus
+        if (FindObjectOfType<PauseScreenUI>() != null)
+            FindObjectOfType<PauseScreenUI>().ShowPauseMenu(false);
+        if (FindObjectOfType<StartScreen>() != null)
+            FindObjectOfType<StartScreen>().ShowStartScreen(false);
+    }
+
+    public void ToggleSettingsMenu()
+    {
+        IsSettingsMenuActive = !IsSettingsMenuActive;
+        settingsPanel.SetActive(IsSettingsMenuActive);
+
+        if (IsSettingsMenuActive)
+        {
+            Time.timeScale = 0;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+        else
+        {
+            Time.timeScale = 1;
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+
+        _anim.SetTrigger("Toggle");
     }
 
     void CloseSettings()
     {
         LoadSettings(); // Revert to previous settings
         ToggleSettingsMenu();
-        if (pauseScreenUI != null)
-        {
-            pauseScreenUI.ShowPauseMenu(true);
-        }
+        // Check which menu to return to
+        if (FindObjectOfType<PauseScreenUI>() != null && FindObjectOfType<PauseScreenUI>().IsPaused)
+            FindObjectOfType<PauseScreenUI>().ShowPauseMenu(true);
+        else if (FindObjectOfType<StartScreen>() != null)
+            FindObjectOfType<StartScreen>().ShowStartScreen(true);
     }
 
     public void ResetNormalHighScore()

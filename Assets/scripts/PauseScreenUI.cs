@@ -8,7 +8,7 @@ using System.Collections.Generic;
 public class PauseScreenUI : MonoBehaviour
 {
     private Canvas pauseCanvas;
-    private bool isPaused = false;
+    public bool IsPaused { get; private set; } = false;
     
     public PlayerMovement playerMovement;
     public PlayerShooting playerShooting;
@@ -186,10 +186,10 @@ public class PauseScreenUI : MonoBehaviour
 
     public void TogglePause()
     {
-        isPaused = !isPaused;
-        pauseCanvas.gameObject.SetActive(isPaused);
+        IsPaused = !IsPaused;
+        pauseCanvas.gameObject.SetActive(IsPaused);
         
-        if (isPaused)
+        if (IsPaused)
         {
             Time.timeScale = 0f;
             DisablePlayerInput();
@@ -263,8 +263,8 @@ public class PauseScreenUI : MonoBehaviour
     {
         if (settingsManager != null)
         {
-            settingsManager.ToggleSettingsMenu();
-            pauseCanvas.gameObject.SetActive(false);
+            ShowPauseMenu(false);
+            settingsManager.OpenSettings();
         }
         else
         {
@@ -284,7 +284,7 @@ public class PauseScreenUI : MonoBehaviour
     public void ShowPauseMenu(bool show)
     {
         pauseCanvas.gameObject.SetActive(show);
-        isPaused = show;
+        IsPaused = show;
 
         if (show)
         {
@@ -295,10 +295,13 @@ public class PauseScreenUI : MonoBehaviour
         }
         else
         {
-            Time.timeScale = 1f;
-            EnablePlayerInput();
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            if (!settingsManager.IsSettingsMenuActive)
+            {
+                Time.timeScale = 1f;
+                EnablePlayerInput();
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
         }
     }
 }
