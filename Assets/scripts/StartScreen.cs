@@ -54,7 +54,7 @@ public class StartScreen : MonoBehaviour
         if (settingsMenu != null)
         {
             ShowStartScreen(false);
-            settingsMenu.GetComponent<SettingsMenu>().ShowSettingsMenu(true);
+            settingsMenu.GetComponent<SettingsManager>().OpenSettings();
         }
     }
 

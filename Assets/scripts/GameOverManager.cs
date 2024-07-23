@@ -11,6 +11,7 @@ public class GameOverManager : MonoBehaviour
     public PlayerMovement playerMovement;
     public PlayerShooting playerShooting;
     public WeaponController weaponController;
+    public SettingsManager settingsManager; // Instead of SettingsMenuUI
 
     void Start()
     {
@@ -24,6 +25,8 @@ public class GameOverManager : MonoBehaviour
             playerShooting = FindObjectOfType<PlayerShooting>();
         if (weaponController == null)
             weaponController = FindObjectOfType<WeaponController>();
+        if (settingsManager == null)
+            settingsManager = FindObjectOfType<SettingsManager>(); // Instead of SettingsMenuUI
 
         PlayerMovement.OnPlayerDeath += ShowGameOverScreen;
     }
@@ -45,6 +48,7 @@ public class GameOverManager : MonoBehaviour
         CreateBackground();
         CreateTitle();
         CreateRetryButton();
+        CreateSettingsButton();
         CreateQuitButton();
     }
 
@@ -78,12 +82,17 @@ public class GameOverManager : MonoBehaviour
 
     void CreateRetryButton()
     {
-        CreateButton("RetryButton", "Retry", new Vector2(0.5f, 0.45f), Retry);
+        CreateButton("RetryButton", "Retry", new Vector2(0.5f, 0.55f), Retry);
+    }
+
+    void CreateSettingsButton()
+    {
+        CreateButton("SettingsButton", "Settings", new Vector2(0.5f, 0.4f), OpenSettings);
     }
 
     void CreateQuitButton()
     {
-        CreateButton("QuitButton", "Quit", new Vector2(0.5f, 0.3f), QuitGame);
+        CreateButton("QuitButton", "Quit", new Vector2(0.5f, 0.25f), QuitGame);
     }
 
     void CreateButton(string name, string text, Vector2 anchorPosition, UnityEngine.Events.UnityAction onClick)
@@ -166,6 +175,15 @@ public class GameOverManager : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         playerMovement.Respawn();
+    }
+
+    void OpenSettings()
+    {
+        if (settingsManager != null)
+        {
+            settingsManager.OpenSettings();
+            gameOverCanvas.gameObject.SetActive(false);
+        }
     }
 
     void QuitGame()

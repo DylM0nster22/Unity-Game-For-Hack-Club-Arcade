@@ -14,6 +14,7 @@ public class PauseScreenUI : MonoBehaviour
     public PlayerShooting playerShooting;
     public WeaponController weaponController;
     public GameObject settingsMenu;
+    public SettingsManager settingsManager; // Instead of SettingsMenuUI
 
     private EventSystem eventSystem;
     private PointerEventData pointerEventData;
@@ -183,7 +184,7 @@ public class PauseScreenUI : MonoBehaviour
         return tmpText;
     }
 
-    void TogglePause()
+    public void TogglePause()
     {
         isPaused = !isPaused;
         pauseCanvas.gameObject.SetActive(isPaused);
@@ -260,16 +261,14 @@ public class PauseScreenUI : MonoBehaviour
 
     void OpenSettings()
     {
-        Debug.Log("Open Settings button pressed");
-        if (settingsMenu != null)
+        if (settingsManager != null)
         {
-            settingsMenu.SetActive(true);
+            settingsManager.ToggleSettingsMenu();
             pauseCanvas.gameObject.SetActive(false);
-            Debug.Log("Settings menu activated");
         }
         else
         {
-            Debug.Log("Settings menu is null");
+            Debug.LogWarning("SettingsManager is not assigned.");
         }
     }
 

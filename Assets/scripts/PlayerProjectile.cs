@@ -2,18 +2,25 @@ using UnityEngine;
 
 public class PlayerProjectile : MonoBehaviour
 {
-    public int damage = 10;
-    public float lifetime = 5f;
-    public float speed = 20f;
+    public int damage;
+    public float speed;
+    public float maxRange;
+
+    private Vector3 initialPosition;
 
     private void Start()
     {
-        Destroy(gameObject, lifetime);
+        initialPosition = transform.position;
     }
 
     private void Update()
     {
         transform.Translate(Vector3.forward * speed * Time.deltaTime);
+
+        if (Vector3.Distance(initialPosition, transform.position) >= maxRange)
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void OnTriggerEnter(Collider other)

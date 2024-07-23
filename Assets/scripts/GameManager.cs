@@ -1,9 +1,11 @@
 using UnityEngine;
 
-public class GameController : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
-    public static GameController Instance;
-    public WeaponController weaponController; // Add this line
+    public static GameManager Instance;
+    public WeaponController weaponController;
+    public SettingsManager settingsManager;
+    public PauseScreenUI pauseScreenUI;
 
     private void Awake()
     {
@@ -18,26 +20,44 @@ public class GameController : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        if (settingsManager != null)
+        {
+            settingsManager.LoadSettings();
+        }
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.R))
         {
             if (weaponController != null)
             {
-                weaponController.Reload(); // Call the reload method on the WeaponController
+                weaponController.Reload();
             }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            TogglePause();
         }
     }
 
     public void RespawnAllEntities()
     {
-        // Respawn all EnemyController objects
         EnemyController[] enemies = FindObjectsOfType<EnemyController>(true);
         foreach (EnemyController enemy in enemies)
         {
             enemy.Respawn();
         }
+    }
 
-        // Add any other object types that need respawning
+    private void TogglePause()
+    {
+        if (pauseScreenUI != null)
+        {
+            pauseScreenUI.TogglePause();
+        }
     }
 }
