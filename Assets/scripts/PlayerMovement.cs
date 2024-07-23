@@ -73,6 +73,15 @@ public class PlayerMovement : MonoBehaviour
     [Header("Weapon Management")]
     public WeaponManager weaponManager;
 
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip walkSound;
+    public AudioClip runSound;
+    public AudioClip jumpSound;
+    private float footstepTimer = 0f;
+    public float footstepInterval = 0.5f;
+    private AudioSource continuousAudioSource; // New audio source for continuous sounds
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -98,6 +107,16 @@ public class PlayerMovement : MonoBehaviour
 
         // Find all enemies in the scene
         enemies = FindObjectsOfType<EnemyController>();
+
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        // Create a new AudioSource for continuous sounds
+        continuousAudioSource = gameObject.AddComponent<AudioSource>();
+        continuousAudioSource.loop = true;
+        continuousAudioSource.playOnAwake = false;
     }
 
     private void Update()
@@ -113,6 +132,8 @@ public class PlayerMovement : MonoBehaviour
         SpeedControl();
         StateHandler();
         LookAround();
+
+        PlayMovementSounds();
 
         // handle drag
         if (grounded)
@@ -302,6 +323,11 @@ public class PlayerMovement : MonoBehaviour
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+
+        if (jumpSound != null)
+        {
+            audioSource.PlayOneShot(jumpSound);
+        }
     }
     private void ResetJump()
     {
@@ -336,6 +362,35 @@ public class PlayerMovement : MonoBehaviour
 
         playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
         transform.Rotate(Vector3.up * mouseX);
+    }
+
+    private void PlayMovementSounds()
+    {
+        bool isMoving = grounded && (horizontalInput != 0 || verticalInput != 0);
+
+        if (isMoving)
+        {
+            AudioClip clipToPlay = (state == MovementState.sprinting) ? runSound : walkSound;
+
+            if (clipToPlay != null && !continuousAudioSource.isPlaying)
+            {
+                continuousAudioSource.clip = clipToPlay;
+                continuousAudioSource.Play();
+            }
+            else if (clipToPlay != continuousAudioSource.clip)
+            {
+                continuousAudioSource.Stop();
+                continuousAudioSource.clip = clipToPlay;
+                continuousAudioSource.Play();
+            }
+        }
+        else
+        {
+            if (continuousAudioSource.isPlaying)
+            {
+                continuousAudioSource.Stop();
+            }
+        }
     }
 }
 

@@ -26,6 +26,11 @@ public class WeaponController : MonoBehaviour
     public float verticalRecoil = 0.1f; // New: Vertical recoil
     public float horizontalRecoil = 0.05f; // New: Horizontal recoil
 
+    [Header("Range Modifier")]
+    public float maxRange = 100f;
+    public float minDamagePercent = 0.5f;
+    public AnimationCurve damageFalloff = AnimationCurve.Linear(0, 1, 1, 0.5f);
+
     [Header("References")]
     public Camera playerCamera;
     public Transform firePoint;
@@ -127,7 +132,6 @@ public class WeaponController : MonoBehaviour
     {
         canShoot = false;
 
-        // Play shoot sound once at the beginning of the Fire method
         if (shootSound != null)
         {
             audioSource.PlayOneShot(shootSound);
@@ -138,7 +142,19 @@ public class WeaponController : MonoBehaviour
             Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
             RaycastHit hit;
 
-            Vector3 targetPoint = Physics.Raycast(ray, out hit) ? hit.point : ray.GetPoint(75);
+            Vector3 targetPoint;
+            float distance;
+
+            if (Physics.Raycast(ray, out hit, maxRange))
+            {
+                targetPoint = hit.point;
+                distance = hit.distance;
+            }
+            else
+            {
+                targetPoint = ray.GetPoint(maxRange);
+                distance = maxRange;
+            }
 
             Vector3 directionWithoutSpread = targetPoint - firePoint.position;
             Vector3 directionWithSpread = directionWithoutSpread + new Vector3(
@@ -152,8 +168,12 @@ public class WeaponController : MonoBehaviour
             
             if (playerProjectile != null)
             {
-                playerProjectile.damage = bulletDamage;
+                float damageMultiplier = damageFalloff.Evaluate(distance / maxRange);
+                int modifiedDamage = Mathf.RoundToInt(bulletDamage * Mathf.Max(damageMultiplier, minDamagePercent));
+                
+                playerProjectile.damage = modifiedDamage;
                 playerProjectile.speed = shootForce;
+                playerProjectile.maxRange = maxRange;
             }
             else
             {
