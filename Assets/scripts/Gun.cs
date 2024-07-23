@@ -18,10 +18,13 @@ public class WeaponController : MonoBehaviour
     public int magazineCapacity = 30;
     public int bulletsPerShot = 1;
     public bool allowButtonHold;
+    public FireMode fireMode = FireMode.Single; // New: Fire mode selection
 
     [Header("Recoil")]
     public Rigidbody playerRb;
     public float recoilForce;
+    public float verticalRecoil = 0.1f; // New: Vertical recoil
+    public float horizontalRecoil = 0.05f; // New: Horizontal recoil
 
     [Header("References")]
     public Camera playerCamera;
@@ -34,9 +37,13 @@ public class WeaponController : MonoBehaviour
     [Header("Enemy Interaction")]
     public float enemyKnockbackForce = 2f;
 
-    [Header("Weapon Info")]
-    public string weaponName;
-    public Sprite weaponIcon;
+    [Header("UI")]
+    public Sprite weaponIcon; // Added this line
+
+    [Header("Audio")]
+    public AudioClip shootSound; // New: Sound effect for shooting
+    public AudioClip reloadSound; // New: Sound effect for reloading
+    private AudioSource audioSource;
 
     private int bulletsRemaining;
     private int bulletsFired;
@@ -49,6 +56,11 @@ public class WeaponController : MonoBehaviour
         canShoot = true;
 
         SetupAmmoDisplay();
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
     }
 
     private void Update()
@@ -68,8 +80,21 @@ public class WeaponController : MonoBehaviour
 
     private void HandleInput()
     {
-        if (allowButtonHold) isShooting = Input.GetButton("Fire1");
-        else isShooting = Input.GetButtonDown("Fire1");
+        switch (fireMode)
+        {
+            case FireMode.Single:
+                isShooting = Input.GetButtonDown("Fire1");
+                break;
+            case FireMode.Burst:
+                if (Input.GetButtonDown("Fire1") && !isShooting)
+                {
+                    StartCoroutine(BurstFire());
+                }
+                break;
+            case FireMode.Auto:
+                isShooting = Input.GetButton("Fire1");
+                break;
+        }
 
         if (Input.GetKeyDown(KeyCode.R) && bulletsRemaining < magazineCapacity && !isReloading) Reload();
         if (canShoot && isShooting && !isReloading && bulletsRemaining <= 0) Reload();
@@ -82,33 +107,58 @@ public class WeaponController : MonoBehaviour
         }
     }
 
+    private IEnumerator BurstFire()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (canShoot && !isReloading && bulletsRemaining > 0)
+            {
+                Fire();
+                yield return new WaitForSeconds(timeBetweenBullets);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
     private void Fire()
     {
         canShoot = false;
 
-        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-        RaycastHit hit;
-
-        Vector3 targetPoint = Physics.Raycast(ray, out hit) ? hit.point : ray.GetPoint(75);
-
-        Vector3 directionWithoutSpread = targetPoint - firePoint.position;
-        Vector3 directionWithSpread = directionWithoutSpread + new Vector3(
-            Random.Range(-spread, spread),
-            Random.Range(-spread, spread),
-            0
-        );
-
-        GameObject currentBullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.LookRotation(directionWithSpread));
-        PlayerProjectile playerProjectile = currentBullet.GetComponent<PlayerProjectile>();
-        
-        if (playerProjectile != null)
+        // Play shoot sound once at the beginning of the Fire method
+        if (shootSound != null)
         {
-            playerProjectile.damage = bulletDamage;
-            playerProjectile.speed = shootForce;
+            audioSource.PlayOneShot(shootSound);
         }
-        else
+
+        for (int i = 0; i < bulletsPerShot; i++)
         {
-            Debug.LogWarning("PlayerProjectile component not found on bullet prefab!");
+            Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+            RaycastHit hit;
+
+            Vector3 targetPoint = Physics.Raycast(ray, out hit) ? hit.point : ray.GetPoint(75);
+
+            Vector3 directionWithoutSpread = targetPoint - firePoint.position;
+            Vector3 directionWithSpread = directionWithoutSpread + new Vector3(
+                Random.Range(-spread, spread),
+                Random.Range(-spread, spread),
+                0
+            );
+
+            GameObject currentBullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.LookRotation(directionWithSpread));
+            PlayerProjectile playerProjectile = currentBullet.GetComponent<PlayerProjectile>();
+            
+            if (playerProjectile != null)
+            {
+                playerProjectile.damage = bulletDamage;
+                playerProjectile.speed = shootForce;
+            }
+            else
+            {
+                Debug.LogWarning("PlayerProjectile component not found on bullet prefab!");
+            }
         }
 
         if (muzzleFlash != null) Instantiate(muzzleFlash, firePoint.position, Quaternion.identity);
@@ -116,14 +166,18 @@ public class WeaponController : MonoBehaviour
         bulletsRemaining--;
         bulletsFired++;
 
-        UpdateAmmoDisplay(); // Update ammo display after firing
+        UpdateAmmoDisplay();
 
-        if (bulletsFired < bulletsPerShot && bulletsRemaining > 0)
-            Invoke(nameof(Fire), timeBetweenBullets);
-
-        playerRb.AddForce(-playerCamera.transform.forward * recoilForce, ForceMode.Impulse);
+        ApplyRecoil();
 
         Invoke(nameof(ResetShot), timeBetweenShots);
+    }
+
+    private void ApplyRecoil()
+    {
+        playerRb.AddForce(-playerCamera.transform.forward * recoilForce, ForceMode.Impulse);
+        playerCamera.transform.Rotate(Vector3.right * verticalRecoil);
+        playerCamera.transform.Rotate(Vector3.up * Random.Range(-horizontalRecoil, horizontalRecoil));
     }
 
     private void ApplyEnemyKnockback(EnemyController enemy)
@@ -153,17 +207,24 @@ public class WeaponController : MonoBehaviour
         canShoot = true;
     }
 
-    public void Reload() // Change this to public
+    public void Reload()
     {
-        isReloading = true;
-        Invoke(nameof(FinishReloading), reloadDuration);
+        if (!isReloading && bulletsRemaining < magazineCapacity)
+        {
+            isReloading = true;
+            if (reloadSound != null)
+            {
+                audioSource.PlayOneShot(reloadSound);
+            }
+            Invoke(nameof(FinishReloading), reloadDuration);
+        }
     }
 
     private void FinishReloading()
     {
         bulletsRemaining = magazineCapacity;
         isReloading = false;
-        UpdateAmmoDisplay(); // Update ammo display after reloading
+        UpdateAmmoDisplay();
     }
 
     private void SetupAmmoDisplay()
@@ -184,5 +245,12 @@ public class WeaponController : MonoBehaviour
         {
             ammoDisplay.SetText($"{bulletsRemaining} / {magazineCapacity}");
         }
+    }
+
+    public enum FireMode
+    {
+        Single,
+        Burst,
+        Auto
     }
 }
