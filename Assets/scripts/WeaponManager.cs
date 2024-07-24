@@ -81,17 +81,6 @@ public class WeaponManager : MonoBehaviour
                 break;
             }
         }
-
-        // Add mouse wheel scrolling for weapon switching
-        float scrollWheel = Input.GetAxis("Mouse ScrollWheel");
-        if (scrollWheel > 0f)
-        {
-            SwitchWeapon((currentWeaponIndex + 1) % weapons.Count);
-        }
-        else if (scrollWheel < 0f)
-        {
-            SwitchWeapon((currentWeaponIndex - 1 + weapons.Count) % weapons.Count);
-        }
     }
 
     void SwitchWeapon(int newIndex)

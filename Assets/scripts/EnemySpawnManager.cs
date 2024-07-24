@@ -7,7 +7,6 @@ public class EnemySpawnManager : MonoBehaviour
     public Vector3 spawnAreaSize;
     public LayerMask groundLayer;
     public float raycastDistance = 10f;
-    public float respawnDelay = 5f;
 
     private static EnemySpawnManager _instance;
     public static EnemySpawnManager Instance
@@ -62,18 +61,6 @@ public class EnemySpawnManager : MonoBehaviour
         } while (!validPosition);
 
         return randomPosition;
-    }
-
-    public void RespawnEnemy(EnemyController enemy)
-    {
-        StartCoroutine(RespawnEnemyCoroutine(enemy));
-    }
-
-    private System.Collections.IEnumerator RespawnEnemyCoroutine(EnemyController enemy)
-    {
-        yield return new WaitForSeconds(respawnDelay);
-        enemy.transform.position = GetRandomSpawnPosition();
-        enemy.Respawn();
     }
 
     private void OnDrawGizmosSelected()

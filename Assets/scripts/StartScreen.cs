@@ -5,7 +5,6 @@ public class StartScreen : MonoBehaviour
 {
     public GameObject startScreenPanel;
     public GameObject settingsMenu;
-    private SettingsManager settingsManager;
 
     private void Start()
     {
@@ -14,9 +13,7 @@ public class StartScreen : MonoBehaviour
         ShowStartScreen(true);
 
         // Disable player input
-        PlayerMovement playerMovement = FindObjectOfType<PlayerMovement>();
-        if (playerMovement != null)
-            playerMovement.enabled = false;
+        FindObjectOfType<PlayerMovement>().enabled = false;
 
         // Disable enemy AI
         EnemyController[] enemies = FindObjectsOfType<EnemyController>();
@@ -24,33 +21,11 @@ public class StartScreen : MonoBehaviour
         {
             enemy.enabled = false;
         }
-
-        // Get the SettingsManager component
-        settingsManager = settingsMenu.GetComponent<SettingsManager>();
-        if (settingsManager == null)
-        {
-            Debug.LogError("SettingsManager component not found on settingsMenu GameObject.");
-        }
     }
 
     public void ShowStartScreen(bool show)
     {
         startScreenPanel.SetActive(show);
-        if (show)
-        {
-            Time.timeScale = 0f;
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-        }
-        else
-        {
-            if (!settingsManager.IsSettingsMenuActive)
-            {
-                Time.timeScale = 1f;
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-            }
-        }
     }
 
     public void StartGame()
@@ -60,9 +35,7 @@ public class StartScreen : MonoBehaviour
         ShowStartScreen(false);
 
         // Enable player input
-        PlayerMovement playerMovement = FindObjectOfType<PlayerMovement>();
-        if (playerMovement != null)
-            playerMovement.enabled = true;
+        FindObjectOfType<PlayerMovement>().enabled = true;
 
         // Enable enemy AI
         EnemyController[] enemies = FindObjectsOfType<EnemyController>();
@@ -71,22 +44,17 @@ public class StartScreen : MonoBehaviour
             enemy.enabled = true;
         }
 
-        // Ensure the cursor is locked and invisible
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
+        // You might want to load your main game scene here
+        // SceneManager.LoadScene("MainGameScene");
     }
 
     public void OpenSettings()
     {
         Debug.Log("Settings screen opened");
-        if (settingsManager != null)
+        if (settingsMenu != null)
         {
             ShowStartScreen(false);
-            settingsManager.OpenSettings();
-        }
-        else
-        {
-            Debug.LogWarning("SettingsManager not assigned to StartScreen.");
+            settingsMenu.GetComponent<SettingsMenu>().ShowSettingsMenu(true);
         }
     }
 

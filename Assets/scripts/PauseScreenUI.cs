@@ -8,13 +8,12 @@ using System.Collections.Generic;
 public class PauseScreenUI : MonoBehaviour
 {
     private Canvas pauseCanvas;
-    public bool IsPaused { get; private set; } = false;
+    private bool isPaused = false;
     
     public PlayerMovement playerMovement;
     public PlayerShooting playerShooting;
     public WeaponController weaponController;
     public GameObject settingsMenu;
-    public SettingsManager settingsManager; // Instead of SettingsMenuUI
 
     private EventSystem eventSystem;
     private PointerEventData pointerEventData;
@@ -184,12 +183,12 @@ public class PauseScreenUI : MonoBehaviour
         return tmpText;
     }
 
-    public void TogglePause()
+    void TogglePause()
     {
-        IsPaused = !IsPaused;
-        pauseCanvas.gameObject.SetActive(IsPaused);
+        isPaused = !isPaused;
+        pauseCanvas.gameObject.SetActive(isPaused);
         
-        if (IsPaused)
+        if (isPaused)
         {
             Time.timeScale = 0f;
             DisablePlayerInput();
@@ -198,13 +197,10 @@ public class PauseScreenUI : MonoBehaviour
         }
         else
         {
-            if (!settingsManager.IsSettingsMenuActive)
-            {
-                Time.timeScale = 1f;
-                EnablePlayerInput();
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-            }
+            Time.timeScale = 1f;
+            EnablePlayerInput();
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
         }
     }
 
@@ -264,14 +260,16 @@ public class PauseScreenUI : MonoBehaviour
 
     void OpenSettings()
     {
-        if (settingsManager != null)
+        Debug.Log("Open Settings button pressed");
+        if (settingsMenu != null)
         {
-            ShowPauseMenu(false);
-            settingsManager.OpenSettings();
+            settingsMenu.SetActive(true);
+            pauseCanvas.gameObject.SetActive(false);
+            Debug.Log("Settings menu activated");
         }
         else
         {
-            Debug.LogWarning("SettingsManager is not assigned.");
+            Debug.Log("Settings menu is null");
         }
     }
 
@@ -287,7 +285,7 @@ public class PauseScreenUI : MonoBehaviour
     public void ShowPauseMenu(bool show)
     {
         pauseCanvas.gameObject.SetActive(show);
-        IsPaused = show;
+        isPaused = show;
 
         if (show)
         {
@@ -298,13 +296,10 @@ public class PauseScreenUI : MonoBehaviour
         }
         else
         {
-            if (!settingsManager.IsSettingsMenuActive)
-            {
-                Time.timeScale = 1f;
-                EnablePlayerInput();
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-            }
+            Time.timeScale = 1f;
+            EnablePlayerInput();
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
         }
     }
 }
