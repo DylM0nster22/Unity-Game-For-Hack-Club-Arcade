@@ -82,6 +82,9 @@ public class PlayerMovement : MonoBehaviour
     public float footstepInterval = 0.5f;
     private AudioSource continuousAudioSource; // New audio source for continuous sounds
 
+    [Header("Game Management")]
+    public GameController gameController; // Added GameController reference
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -277,14 +280,10 @@ public class PlayerMovement : MonoBehaviour
             playerHUD.SetHealth(currentHealth);
         }
 
-        // Reset position or other necessary states
-        // Optionally, you can reset the position to a spawn point
-        // transform.position = spawnPoint;
-
-        // Respawn all enemies
-        foreach (EnemyController enemy in enemies)
+        // Instead of respawning enemies, reset the wave spawner
+        if (gameController != null)
         {
-            enemy.Respawn();
+            gameController.RespawnAllEntities();
         }
     }
 

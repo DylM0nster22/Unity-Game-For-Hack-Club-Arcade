@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System;
 
 public class EnemyController : MonoBehaviour
 {
@@ -38,6 +39,8 @@ public class EnemyController : MonoBehaviour
     private Health healthComponent;
 
     private Vector3 initialPosition;
+
+    public event Action<GameObject> OnEnemyDeath; // Add this line
 
     private void Awake()
     {
@@ -121,8 +124,8 @@ public class EnemyController : MonoBehaviour
     private void SearchPatrolPoint()
     {
         //Calculate random point in range
-        float randomZ = Random.Range(-patrolRange, patrolRange);
-        float randomX = Random.Range(-patrolRange, patrolRange);
+        float randomZ = UnityEngine.Random.Range(-patrolRange, patrolRange);
+        float randomX = UnityEngine.Random.Range(-patrolRange, patrolRange);
 
         patrolPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
 
@@ -193,28 +196,8 @@ public class EnemyController : MonoBehaviour
     private void HandleDeath()
     {
         isDead = true;
-        // Disable the enemy temporarily
-        gameObject.SetActive(false);
-
-        // Schedule respawn
-        Invoke(nameof(Respawn), respawnDelay);
-    }
-
-    public void Respawn()
-    {
-        // Reset health
-        currentHealth = maxHealth;
-        UpdateHealthComponent();
-
-        isDead = false;
-
-        // Re-enable the enemy
-        gameObject.SetActive(true);
-
-        // Reset position to the initial position
-        transform.position = initialPosition;
-
-        // ... any other respawn logic ...
+        OnEnemyDeath?.Invoke(gameObject);
+        Destroy(gameObject);
     }
 
     private void OnDrawGizmosSelected()

@@ -1007,8 +1007,7 @@ MonoBehaviour:
   playerMovement: {fileID: 3798116784821347086}
   playerShooting: {fileID: 0}
   weaponController: {fileID: 0}
-  settingsMenu: {fileID: 0}
-  settingsMenuUI: {fileID: 0}
+  settingsMenu: {fileID: 1658770252}
   settingsButton: {fileID: 0}
   restartButton: {fileID: 0}
 --- !u!4 &122159111
@@ -2027,20 +2026,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 352665531}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc0d029218ba55246b8ebcd58ded8714, type: 3}
+  m_Script: {fileID: 11500000, guid: 7f9275a637f520b468adbf407fc531b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settingsPanel: {fileID: 0}
-  fpsLimitSlider: {fileID: 0}
-  fpsCounterToggle: {fileID: 0}
-  resolutionDropdown: {fileID: 0}
-  fullscreenToggle: {fileID: 0}
-  mouseSensitivitySlider: {fileID: 0}
-  volumeSlider: {fileID: 0}
-  applyButton: {fileID: 1215505431}
+  brightnessSlider: {fileID: 667877710}
+  audioSlider: {fileID: 0}
+  saveButton: {fileID: 0}
   backButton: {fileID: 0}
-  fpsCounter: {fileID: 461127190}
-  pauseScreenUI: {fileID: 122159110}
 --- !u!1 &384276182
 GameObject:
   m_ObjectHideFlags: 0
@@ -6956,7 +6948,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   raycastDistance: 10
-  respawnDelay: 5
 --- !u!4 &1339780619
 Transform:
   m_ObjectHideFlags: 0
@@ -8417,8 +8408,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponController: {fileID: 0}
-  settingsMenuUI: {fileID: 352665533}
-  pauseScreenUI: {fileID: 122159110}
 --- !u!4 &1632897805
 Transform:
   m_ObjectHideFlags: 0
@@ -8675,17 +8664,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f9275a637f520b468adbf407fc531b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioMixer: {fileID: 24100000, guid: a4a1b8233e3b80a4781b83d8b0c8419b, type: 2}
-  qualityDropdown: {fileID: 607165951}
-  resolutionDropdown: {fileID: 2051177206}
-  fullscreenToggle: {fileID: 1520460292}
-  masterVolumeSlider: {fileID: 1312574340}
-  musicVolumeSlider: {fileID: 1248578954}
-  sfxVolumeSlider: {fileID: 1809322213}
   brightnessSlider: {fileID: 667877710}
-  brightnessOverlay: {fileID: 914587807}
-  applyButton: {fileID: 1215505431}
-  cancelButton: {fileID: 88495066}
+  audioSlider: {fileID: 0}
+  saveButton: {fileID: 0}
+  backButton: {fileID: 0}
 --- !u!1 &1660328060
 GameObject:
   m_ObjectHideFlags: 0
@@ -10090,7 +10072,6 @@ MonoBehaviour:
   playerMovement: {fileID: 3798116784821347086}
   playerShooting: {fileID: 0}
   weaponController: {fileID: 0}
-  settingsMenuUI: {fileID: 352665533}
 --- !u!1 &2051177202
 GameObject:
   m_ObjectHideFlags: 0

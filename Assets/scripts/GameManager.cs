@@ -3,7 +3,8 @@ using UnityEngine;
 public class GameController : MonoBehaviour
 {
     public static GameController Instance;
-    public WeaponController weaponController; // Add this line
+    public WeaponController weaponController;
+    public WaveEnemySpawner waveEnemySpawner; // Added this line
 
     private void Awake()
     {
@@ -24,20 +25,19 @@ public class GameController : MonoBehaviour
         {
             if (weaponController != null)
             {
-                weaponController.Reload(); // Call the reload method on the WeaponController
+                weaponController.Reload();
             }
         }
     }
 
     public void RespawnAllEntities()
     {
-        // Respawn all EnemyController objects
-        EnemyController[] enemies = FindObjectsOfType<EnemyController>(true);
-        foreach (EnemyController enemy in enemies)
+        // Instead of respawning individual enemies, reset the wave spawner
+        if (waveEnemySpawner != null)
         {
-            enemy.Respawn();
+            waveEnemySpawner.ResetWaves(); // Added this line
         }
 
-        // Add any other object types that need respawning
+        // Add any other respawn logic here
     }
 }
