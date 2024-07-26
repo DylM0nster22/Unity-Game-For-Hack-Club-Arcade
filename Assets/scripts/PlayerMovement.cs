@@ -271,6 +271,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void Respawn()
     {
+        Debug.Log("Player respawned.");
         // Reset health
         currentHealth = maxHealth;
 
@@ -280,11 +281,14 @@ public class PlayerMovement : MonoBehaviour
             playerHUD.SetHealth(currentHealth);
         }
 
-        // Instead of respawning enemies, reset the wave spawner
+        // Reset the wave spawner
         if (gameController != null)
         {
-            gameController.RespawnAllEntities();
+            Debug.Log("Calling RespawnAllEntities.");
+            gameController.RespawnAllEntities(); // This will reset the enemies
         }
+
+        // Reset the player's position or any other respawn logic if needed
     }
 
     public void TakeDamage(int damage)

@@ -44,7 +44,6 @@ public class GameOverManager : MonoBehaviour
 
         CreateBackground();
         CreateTitle();
-        CreateRetryButton();
         CreateQuitButton();
     }
 
@@ -76,14 +75,10 @@ public class GameOverManager : MonoBehaviour
         titleRect.anchoredPosition = Vector2.zero;
     }
 
-    void CreateRetryButton()
-    {
-        CreateButton("RetryButton", "Retry", new Vector2(0.5f, 0.45f), Retry);
-    }
-
     void CreateQuitButton()
     {
         CreateButton("QuitButton", "Quit", new Vector2(0.5f, 0.3f), QuitGame);
+        CreateButton("TitleButton", "Back to Title", new Vector2(0.5f, 0.45f), BackToTitle);
     }
 
     void CreateButton(string name, string text, Vector2 anchorPosition, UnityEngine.Events.UnityAction onClick)
@@ -157,20 +152,16 @@ public class GameOverManager : MonoBehaviour
             weaponController.enabled = true;
     }
 
-    void Retry()
-    {
-        isGameOver = false;
-        gameOverCanvas.gameObject.SetActive(false);
-        Time.timeScale = 1f;
-        EnablePlayerInput();
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-        playerMovement.Respawn();
-    }
-
     void QuitGame()
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    void BackToTitle()
+    {
+        Debug.Log("Returning to title screen");
+        Time.timeScale = 1f; // Ensure the game is unpaused
+        SceneManager.LoadScene("StartScreen"); // Replace with your actual title screen scene name
     }
 }

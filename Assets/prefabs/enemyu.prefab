@@ -226,7 +226,7 @@ MonoBehaviour:
   projectileDamage: 10
   shootingForce: 32
   projectileSpeed: 100
-  sightRange: 40
+  sightRange: 925.4
   attackRange: 9.8
   playerInSightRange: 0
   playerInAttackRange: 0

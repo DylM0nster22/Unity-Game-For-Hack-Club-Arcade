@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System;
+using System.Collections; // Added this line
 
 public class EnemyController : MonoBehaviour
 {
@@ -197,7 +198,7 @@ public class EnemyController : MonoBehaviour
     {
         isDead = true;
         OnEnemyDeath?.Invoke(gameObject);
-        Destroy(gameObject);
+        Destroy(gameObject); // Destroy the enemy immediately
     }
 
     private void OnDrawGizmosSelected()

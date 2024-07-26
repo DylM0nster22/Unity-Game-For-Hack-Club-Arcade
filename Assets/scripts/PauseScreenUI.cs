@@ -13,7 +13,7 @@ public class PauseScreenUI : MonoBehaviour
     public PlayerMovement playerMovement;
     public PlayerShooting playerShooting;
     public WeaponController weaponController;
-    public GameObject settingsMenu;
+    public GameObject settingsMenu; // Reference to the settings menu
 
     private EventSystem eventSystem;
     private PointerEventData pointerEventData;
@@ -255,17 +255,22 @@ public class PauseScreenUI : MonoBehaviour
     {
         Debug.Log("Restart Game");
         Time.timeScale = 1f;
+        
+        // Reset the enemy waves
+        if (GameController.Instance.waveEnemySpawner != null)
+        {
+            GameController.Instance.waveEnemySpawner.ResetWaves();
+        }
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     void OpenSettings()
     {
-        Debug.Log("Open Settings button pressed");
         if (settingsMenu != null)
         {
             settingsMenu.SetActive(true);
             pauseCanvas.gameObject.SetActive(false);
-            Debug.Log("Settings menu activated");
         }
         else
         {
