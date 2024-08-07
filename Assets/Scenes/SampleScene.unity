@@ -8193,7 +8193,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponController: {fileID: 0}
-  waveEnemySpawner: {fileID: 0}
+  waveEnemySpawner: {fileID: 259343568}
 --- !u!4 &1632897805
 Transform:
   m_ObjectHideFlags: 0
@@ -9855,10 +9855,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 491a840a680b2164296800a23638a472, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  startScreen: {fileID: 484417128}
   playerMovement: {fileID: 3798116784821347086}
   playerShooting: {fileID: 0}
   weaponController: {fileID: 0}
-  startScreen: {fileID: 0}
 --- !u!1 &2051177202
 GameObject:
   m_ObjectHideFlags: 0

@@ -165,14 +165,17 @@ public class GameOverManager : MonoBehaviour
         Debug.Log("Returning to title screen");
         Time.timeScale = 1f; // Ensure the game is unpaused
 
-        // Reset the player's health
+        // Reset the player's health and position
         if (playerMovement != null)
         {
             playerMovement.ResetPlayer();
         }
 
+        // Despawn all enemies
+        DespawnAllEnemies();
+
         // Reset the enemy waves
-        if (GameController.Instance.waveEnemySpawner != null)
+        if (GameController.Instance != null && GameController.Instance.waveEnemySpawner != null)
         {
             GameController.Instance.waveEnemySpawner.ResetWaves();
         }
@@ -180,16 +183,30 @@ public class GameOverManager : MonoBehaviour
         // Disable the Game Over UI
         gameOverCanvas.gameObject.SetActive(false);
 
-        // Enable the Start Screen
+        // Enable and show the Start Screen
         if (startScreen != null)
         {
-            startScreen.SetActive(true);
+            startScreen.gameObject.SetActive(true);
+            startScreen.ShowStartScreen(true);
+        }
+        else
+        {
+            Debug.LogError("StartScreen reference is missing in GameOverManager!");
         }
 
         // Disable player input
         if (playerMovement != null)
         {
             playerMovement.enabled = false;
+        }
+    }
+
+    void DespawnAllEnemies()
+    {
+        EnemyController[] enemies = FindObjectsOfType<EnemyController>();
+        foreach (EnemyController enemy in enemies)
+        {
+            Destroy(enemy.gameObject);
         }
     }
 }

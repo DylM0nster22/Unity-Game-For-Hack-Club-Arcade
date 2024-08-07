@@ -85,6 +85,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Game Management")]
     public GameController gameController; // Added GameController reference
 
+    public Vector3 initialPosition = new Vector3(0, 1, 0); // Adjust this to your desired spawn point
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -324,8 +326,17 @@ public class PlayerMovement : MonoBehaviour
         currentHealth = maxHealth;
 
         // Reset position
-        transform.position = Vector3.zero; // Adjust as needed
+        transform.position = initialPosition;
         rb.linearVelocity = Vector3.zero; // Reset velocity
+
+        // Update the HUD
+        if (playerHUD != null)
+        {
+            playerHUD.SetHealth(currentHealth);
+        }
+
+        // Ensure the player's rotation is reset
+        transform.rotation = Quaternion.identity;
     }
 
     private void Jump()

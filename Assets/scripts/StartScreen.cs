@@ -13,22 +13,26 @@ public class StartScreen : MonoBehaviour
         ShowStartScreen(true);
 
         // Disable player input
-        if (FindObjectOfType<PlayerMovement>() != null)
-        {
-            FindObjectOfType<PlayerMovement>().enabled = false;
-        }
+        DisablePlayerInput();
 
         // Disable enemy AI
-        EnemyController[] enemies = FindObjectsOfType<EnemyController>();
-        foreach (EnemyController enemy in enemies)
-        {
-            enemy.enabled = false;
-        }
+        DisableEnemyAI(); // Ensure enemy AI is disabled when the start screen is active
     }
 
     public void ShowStartScreen(bool show)
     {
         startScreenPanel.SetActive(show);
+        if (show)
+        {
+            // Pause the game when the start screen is active
+            Time.timeScale = 0f;
+
+            // Disable player input
+            DisablePlayerInput();
+
+            // Disable enemy AI
+            DisableEnemyAI();
+        }
     }
 
     public void StartGame()
@@ -38,20 +42,49 @@ public class StartScreen : MonoBehaviour
         ShowStartScreen(false);
 
         // Enable player input
-        if (FindObjectOfType<PlayerMovement>() != null)
-        {
-            FindObjectOfType<PlayerMovement>().enabled = true;
-        }
+        EnablePlayerInput();
 
         // Enable enemy AI
-        EnemyController[] enemies = FindObjectsOfType<EnemyController>();
-        foreach (EnemyController enemy in enemies)
-        {
-            enemy.enabled = true;
-        }
+        EnableEnemyAI();
 
         // You might want to load your main game scene here
         // SceneManager.LoadScene("MainGameScene");
+    }
+
+    private void DisablePlayerInput()
+    {
+        PlayerMovement playerMovement = FindObjectOfType<PlayerMovement>();
+        if (playerMovement != null)
+        {
+            playerMovement.enabled = false; // Disable player movement
+        }
+    }
+
+    private void EnablePlayerInput()
+    {
+        PlayerMovement playerMovement = FindObjectOfType<PlayerMovement>();
+        if (playerMovement != null)
+        {
+            playerMovement.enabled = true;
+        }
+    }
+
+    private void DisableEnemyAI()
+    {
+        EnemyController[] enemies = FindObjectsOfType<EnemyController>();
+        foreach (EnemyController enemy in enemies)
+        {
+            enemy.enabled = false; // Disable enemy AI
+        }
+    }
+
+    private void EnableEnemyAI()
+    {
+        EnemyController[] enemies = FindObjectsOfType<EnemyController>();
+        foreach (EnemyController enemy in enemies)
+        {
+            enemy.enabled = true; // Enable each enemy's AI
+        }
     }
 
     public void OpenSettings()
