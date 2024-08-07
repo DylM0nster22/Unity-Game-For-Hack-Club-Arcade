@@ -11,6 +11,7 @@ public class GameOverManager : MonoBehaviour
     public PlayerMovement playerMovement;
     public PlayerShooting playerShooting;
     public WeaponController weaponController;
+    public GameObject startScreen; // Reference to the StartScreen GameObject
 
     void Start()
     {
@@ -163,6 +164,26 @@ public class GameOverManager : MonoBehaviour
     {
         Debug.Log("Returning to title screen");
         Time.timeScale = 1f; // Ensure the game is unpaused
-        SceneManager.LoadScene("StartScreen"); // Replace with your actual title screen scene name
+
+        // Reset the player's health
+        if (playerMovement != null)
+        {
+            playerMovement.ResetPlayer();
+        }
+
+        // Reset the enemy waves
+        if (GameController.Instance.waveEnemySpawner != null)
+        {
+            GameController.Instance.waveEnemySpawner.ResetWaves();
+        }
+
+        // Disable the Game Over UI
+        gameOverCanvas.gameObject.SetActive(false);
+
+        // Enable the Start Screen
+        if (startScreen != null)
+        {
+            startScreen.SetActive(true);
+        }
     }
 }
