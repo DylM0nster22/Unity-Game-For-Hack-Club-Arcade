@@ -32,7 +32,7 @@ public class GameController : MonoBehaviour
 
     public void RespawnAllEntities()
     {
-        // Instead of respawning individual enemies, reset the wave spawner
+        // Reset the wave spawner
         if (waveEnemySpawner != null)
         {
             Debug.Log("Resetting waves...");

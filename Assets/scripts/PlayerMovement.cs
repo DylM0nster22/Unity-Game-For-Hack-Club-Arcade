@@ -318,6 +318,16 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    public void ResetPlayer()
+    {
+        // Reset health
+        currentHealth = maxHealth;
+
+        // Reset position
+        transform.position = Vector3.zero; // Adjust as needed
+        rb.linearVelocity = Vector3.zero; // Reset velocity
+    }
+
     private void Jump()
     {
         exitingSlope = true;

@@ -144,6 +144,7 @@ public class GameOverManager : MonoBehaviour
 
     void EnablePlayerInput()
     {
+        // Reset player health, score, and any other relevant game state variables
         if (playerMovement != null)
             playerMovement.enabled = true;
         if (playerShooting != null)
