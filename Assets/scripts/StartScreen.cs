@@ -13,7 +13,10 @@ public class StartScreen : MonoBehaviour
         ShowStartScreen(true);
 
         // Disable player input
-        FindObjectOfType<PlayerMovement>().enabled = false;
+        if (FindObjectOfType<PlayerMovement>() != null)
+        {
+            FindObjectOfType<PlayerMovement>().enabled = false;
+        }
 
         // Disable enemy AI
         EnemyController[] enemies = FindObjectsOfType<EnemyController>();
@@ -35,7 +38,10 @@ public class StartScreen : MonoBehaviour
         ShowStartScreen(false);
 
         // Enable player input
-        FindObjectOfType<PlayerMovement>().enabled = true;
+        if (FindObjectOfType<PlayerMovement>() != null)
+        {
+            FindObjectOfType<PlayerMovement>().enabled = true;
+        }
 
         // Enable enemy AI
         EnemyController[] enemies = FindObjectsOfType<EnemyController>();

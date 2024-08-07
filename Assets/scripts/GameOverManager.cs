@@ -5,13 +5,13 @@ using UnityEngine.SceneManagement;
 
 public class GameOverManager : MonoBehaviour
 {
+    public GameObject startScreen; // Reference to the Start Screen GameObject
     private Canvas gameOverCanvas;
     private bool isGameOver = false;
 
     public PlayerMovement playerMovement;
     public PlayerShooting playerShooting;
     public WeaponController weaponController;
-    public GameObject startScreen; // Reference to the StartScreen GameObject
 
     void Start()
     {
@@ -184,6 +184,12 @@ public class GameOverManager : MonoBehaviour
         if (startScreen != null)
         {
             startScreen.SetActive(true);
+        }
+
+        // Disable player input
+        if (playerMovement != null)
+        {
+            playerMovement.enabled = false;
         }
     }
 }

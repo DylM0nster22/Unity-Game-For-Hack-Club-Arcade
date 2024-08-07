@@ -90,14 +90,22 @@ public class WaveEnemySpawner : MonoBehaviour
     public void ResetWaves()
     {
         Debug.Log("Resetting waves...");
+
+        // Stop all ongoing wave spawning
         StopAllCoroutines();
+
+        // Destroy all active enemies
         foreach (GameObject enemy in activeEnemies)
         {
             Debug.Log("Destroying enemy: " + enemy.name);
             Destroy(enemy);
         }
-        activeEnemies.Clear();
-        currentWave = 0; // Reset the wave count
-        StartCoroutine(SpawnWaves()); // Restart the wave spawning
+        activeEnemies.Clear(); // Clear the list of active enemies
+
+        // Reset the wave count
+        currentWave = 0;
+
+        // Optionally, restart the wave spawning
+        StartCoroutine(SpawnWaves());
     }
 }
