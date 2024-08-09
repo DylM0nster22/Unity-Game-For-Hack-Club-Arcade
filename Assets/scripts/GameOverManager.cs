@@ -184,9 +184,9 @@ public class GameOverManager : MonoBehaviour
         gameOverCanvas.gameObject.SetActive(false);
 
         // Enable and show the Start Screen
+        StartScreen startScreen = FindObjectOfType<StartScreen>();
         if (startScreen != null)
         {
-            startScreen.gameObject.SetActive(true);
             startScreen.ShowStartScreen(true);
         }
         else

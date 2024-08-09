@@ -24,6 +24,9 @@ public class StartScreen : MonoBehaviour
         startScreenPanel.SetActive(show);
         if (show)
         {
+            // Mute all audio sources
+            MuteAllAudio();
+
             // Pause the game when the start screen is active
             Time.timeScale = 0f;
 
@@ -33,6 +36,21 @@ public class StartScreen : MonoBehaviour
             // Disable enemy AI
             DisableEnemyAI();
         }
+        else
+        {
+            // Unmute all audio sources when starting the game
+            UnmuteAllAudio();
+        }
+    }
+
+    private void MuteAllAudio()
+    {
+        AudioListener.volume = 0f; // Mute audio
+    }
+
+    private void UnmuteAllAudio()
+    {
+        AudioListener.volume = 1f; // Restore audio
     }
 
     public void StartGame()
@@ -46,6 +64,9 @@ public class StartScreen : MonoBehaviour
 
         // Enable enemy AI
         EnableEnemyAI();
+
+        // Unmute all audio sources when starting the game
+        UnmuteAllAudio();
 
         // You might want to load your main game scene here
         // SceneManager.LoadScene("MainGameScene");
